@@ -31,7 +31,7 @@ jobs:
           xcodebuild -project SensiBotMax.xcodeproj \
             -scheme SensiBotMax \
             -configuration Release \
-            -destination 'generic/platform=iOS' \
+            -sdk iphoneos \
             -derivedDataPath build/DerivedData \
             build \
             CODE_SIGNING_ALLOWED=NO \
@@ -40,16 +40,18 @@ jobs:
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" > ../xcodebuild_output.txt 2>&1
 
-      - name: Display Xcodebuild Diagnostics
+      - name: Publish Diagnostics to Summary
+        if: always()
         run: |
-          echo "=== LAST 120 LINES OF XCODEBUILD OUTPUT ==="
-          tail -n 120 xcodebuild_output.txt
-          echo "=========================================="
+          echo "### Xcodebuild Output" >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
+          cat xcodebuild_output.txt | tail -n 80 >> $GITHUB_STEP_SUMMARY
+          echo '```' >> $GITHUB_STEP_SUMMARY
 
       - name: Verify Build Succeeded
         if: steps.build_step.outcome != 'success'
         run: |
-          echo "Build step failed. Inspect diagnostics above."
+          echo "Build step failed. View summary above."
           exit 1
 
       - name: Package into IPA Payload
