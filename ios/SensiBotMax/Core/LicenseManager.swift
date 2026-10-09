@@ -10,12 +10,6 @@ public enum LicenseValidationResult {
 public final class LicenseManager: ObservableObject {
     public static let shared = LicenseManager()
 
-    // Supabase Credentials (Identical to Android client)
-    private static let projectUrl = "https://xvmrtmyjnbxpsgpikths.supabase.co"
-    private static let anonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inh2bXJ0bXlqbmJ4cHNncGlrdGhzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk2Mzc4MDUsImV4cCI6MjEwNTIxMzgwNX0.xzRhS5vjsclhHQgP4yJNtrZFcWMVRH090im4YyQf1BU"
-    private static let validateEndpoint = "\(projectUrl)/functions/v1/validate_license"
-    private static let checkSessionEndpoint = "\(projectUrl)/functions/v1/check_session"
-
     @Published public var isActivated: Bool = false
     @Published public var activeKey: String = ""
     @Published public var hardwareId: String = ""
@@ -31,6 +25,7 @@ public final class LicenseManager: ObservableObject {
     private let keyKeychainHardwareId = "sensibot_ios_hwid"
 
     public init() {
+        SupabaseConfig.logStartupConfig()
         self.hardwareId = getOrCreateHardwareId()
         self.activeKey = UserDefaults.standard.string(forKey: keyUserDefault) ?? ""
         let savedToken = UserDefaults.standard.string(forKey: tokenUserDefault) ?? ""
@@ -59,7 +54,7 @@ public final class LicenseManager: ObservableObject {
         return "Apple \(profile.modelMarketingName) (\(profile.identifier)) • iOS \(sysVersion)"
     }
 
-    /// Validates the license key against Supabase Edge Function
+    /// Validates the license key against Supabase Edge Function with 1 automatic retry
     @MainActor
     public func activateKey(_ key: String) async -> (Bool, String) {
         let trimmed = key.trimmingCharacters(in: .whitespacesAndNewlines).uppercased()
@@ -70,19 +65,54 @@ public final class LicenseManager: ObservableObject {
         self.isVerifying = true
         defer { self.isVerifying = false }
 
-        guard let url = URL(string: Self.validateEndpoint) else {
-            return (false, "Invalid endpoint configuration.")
+        // Attempt 1, followed by 1 retry on transient failure
+        for attempt in 1...2 {
+            print("[LicenseManager] Starting validation attempt \(attempt)/2 for key: \(trimmed.prefix(4))****")
+            let result = await executeValidationRequest(key: trimmed)
+
+            switch result {
+            case .success(let token):
+                UserDefaults.standard.set(trimmed, forKey: self.keyUserDefault)
+                UserDefaults.standard.set(token, forKey: self.tokenUserDefault)
+                self.activeKey = trimmed
+                self.isActivated = true
+                self.statusMessage = "VIP License Active! Bound to \(self.hardwareId)"
+                return (true, "VIP License Activated Successfully!")
+
+            case .failure(let error):
+                // If it's a non-transient error (e.g. invalid key or device mismatch), don't retry
+                if error.isFatal || attempt == 2 {
+                    self.statusMessage = error.userMessage
+                    return (false, error.userMessage)
+                }
+
+                print("[LicenseManager] Transient failure on attempt \(attempt): \(error.userMessage). Retrying in 1s...")
+                try? await Task.sleep(nanoseconds: 1_000_000_000)
+            }
+        }
+
+        return (false, "Unable to validate license. Please check your network and try again.")
+    }
+
+    private struct ValidationError {
+        let userMessage: String
+        let isFatal: Bool
+    }
+
+    private func executeValidationRequest(key: String) async -> Result<String, ValidationError> {
+        guard let url = URL(string: SupabaseConfig.validateEndpoint) else {
+            return .failure(ValidationError(userMessage: "Invalid server endpoint configuration.", isFatal: true))
         }
 
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.timeoutInterval = 12.0
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(Self.anonKey, forHTTPHeaderField: "apikey")
-        request.setValue("Bearer \(Self.anonKey)", forHTTPHeaderField: "Authorization")
+        request.setValue(SupabaseConfig.anonKey, forHTTPHeaderField: "apikey")
+        request.setValue("Bearer \(SupabaseConfig.anonKey)", forHTTPHeaderField: "Authorization")
 
         let payload: [String: Any] = [
-            "key": trimmed,
+            "key": key,
             "device_id": self.hardwareId,
             "device_info": getDeviceInfoString()
         ]
@@ -92,38 +122,62 @@ public final class LicenseManager: ObservableObject {
             let (data, response) = try await URLSession.shared.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
-                return (false, "Unable to connect to license server.")
+                return .failure(ValidationError(userMessage: "Invalid server response.", isFatal: false))
             }
 
-            if httpResponse.statusCode == 429 {
-                let msg = "Too many attempts, try again later"
-                self.statusMessage = msg
-                return (false, msg)
+            let responseBodyString = String(data: data, encoding: .utf8) ?? ""
+            print("[LicenseManager] HTTP \(httpResponse.statusCode) -> Body: \(responseBodyString)")
+
+            // Parse JSON response
+            let json = (try? JSONSerialization.jsonObject(with: data) as? [String: Any]) ?? [:]
+            let serverError = (json["error"] as? String) ?? (json["message"] as? String)
+
+            switch httpResponse.statusCode {
+            case 200...299:
+                if let token = json["token"] as? String {
+                    return .success(token)
+                } else if json["success"] as? Bool == true {
+                    return .success("active_session")
+                } else {
+                    return .failure(ValidationError(userMessage: serverError ?? "Invalid license token.", isFatal: true))
+                }
+
+            case 400:
+                let msg = serverError ?? "Invalid or inactive license key."
+                return .failure(ValidationError(userMessage: msg, isFatal: true))
+
+            case 403:
+                let msg = serverError ?? "This key is already active on another device."
+                return .failure(ValidationError(userMessage: msg, isFatal: true))
+
+            case 429:
+                let msg = serverError ?? "Too many attempts, try again later"
+                return .failure(ValidationError(userMessage: msg, isFatal: true))
+
+            case 500...599:
+                let msg = "Server error (\(httpResponse.statusCode)). Please try again shortly."
+                return .failure(ValidationError(userMessage: msg, isFatal: false))
+
+            default:
+                let msg = serverError ?? "Validation rejected (HTTP \(httpResponse.statusCode))."
+                return .failure(ValidationError(userMessage: msg, isFatal: true))
             }
 
-            guard let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else {
-                return (false, "Invalid server response.")
-            }
-
-            let success = json["success"] as? Bool ?? false
-
-            if success && (200...299).contains(httpResponse.statusCode) {
-                let token = json["token"] as? String ?? "active_session"
-                UserDefaults.standard.set(trimmed, forKey: self.keyUserDefault)
-                UserDefaults.standard.set(token, forKey: self.tokenUserDefault)
-                self.activeKey = trimmed
-                self.isActivated = true
-                self.statusMessage = "VIP License Active! Bound to \(self.hardwareId)"
-                return (true, "VIP License Activated Successfully!")
-            } else {
-                let serverMsg = json["message"] as? String ?? "Invalid or inactive key"
-                self.statusMessage = serverMsg
-                return (false, serverMsg)
+        } catch let urlError as URLError {
+            print("[LicenseManager] URLError: \(urlError.code) - \(urlError.localizedDescription)")
+            switch urlError.code {
+            case .notConnectedToInternet:
+                return .failure(ValidationError(userMessage: "You appear to be offline. Check your internet connection.", isFatal: false))
+            case .timedOut:
+                return .failure(ValidationError(userMessage: "License server timed out. Retrying...", isFatal: false))
+            case .cannotFindHost, .cannotConnectToHost:
+                return .failure(ValidationError(userMessage: "Cannot reach license server. Check your network or DNS.", isFatal: false))
+            default:
+                return .failure(ValidationError(userMessage: "Network error (\(urlError.code.rawValue)). Please check your connection.", isFatal: false))
             }
         } catch {
-            let errorMsg = "Unable to connect to license server. Check your internet connection."
-            self.statusMessage = errorMsg
-            return (false, errorMsg)
+            print("[LicenseManager] General error: \(error.localizedDescription)")
+            return .failure(ValidationError(userMessage: "Connection failed: \(error.localizedDescription)", isFatal: false))
         }
     }
 
