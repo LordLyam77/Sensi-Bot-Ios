@@ -4,7 +4,6 @@ struct MainTabView: View {
     @State private var selectedTab: Int = 0
 
     init() {
-        // Customize UITabBar appearance for a true cyberpunk obsidian aesthetic
         let appearance = UITabBarAppearance()
         appearance.configureWithOpaqueBackground()
         appearance.backgroundColor = UIColor(red: 0.043, green: 0.043, blue: 0.055, alpha: 1.0) // #0B0B0E
@@ -45,19 +44,19 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
-            LicenseView()
+            SensiBotView()
                 .tabItem {
-                    Label("VIP PASS", systemImage: "key.fill")
+                    Label("SENSI BOT", systemImage: "cpu.fill")
                 }
                 .tag(3)
 
-            SupportView()
+            ProfileView()
                 .tabItem {
-                    Label("SUPPORT", systemImage: "headphones")
+                    Label("PROFILE", systemImage: "person.crop.circle")
                 }
                 .tag(4)
         }
-        .accentColor(ColorTheme.rubyRed)
+        .accentColor(SensiTheme.rubyRed)
         .preferredColorScheme(.dark)
     }
 }

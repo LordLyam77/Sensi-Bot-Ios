@@ -3,6 +3,8 @@ import AVFoundation
 
 @main
 struct SensiBotMaxApp: App {
+    @ObservedObject var licenseManager = LicenseManager.shared
+
     init() {
         // Configure background audio playback session for PiP floating HUD
         do {
@@ -15,7 +17,11 @@ struct SensiBotMaxApp: App {
 
     var body: some Scene {
         WindowGroup {
-            MainTabView()
+            if licenseManager.isActivated {
+                MainTabView()
+            } else {
+                LicenseGateView()
+            }
         }
     }
 }

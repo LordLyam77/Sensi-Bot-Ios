@@ -3,147 +3,150 @@ import AVKit
 
 struct PipOverlayView: View {
     @ObservedObject var pipManager = PipOverlayManager.shared
-    @State private var isPipActive = false
-    @State private var showingFreeFireReminder = false
 
     var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 // Header
-                VStack(spacing: 8) {
+                VStack(spacing: 6) {
                     HStack {
                         Image(systemName: "pip.enter")
                             .font(.system(size: 24, weight: .bold))
-                            .foregroundColor(ColorTheme.rubyRed)
+                            .foregroundColor(SensiTheme.rubyRed)
                         Text("FLOATING HUD")
-                            .font(.system(size: 22, weight: .black, design: .monospaced))
-                            .foregroundColor(ColorTheme.pureWhite)
+                            .font(.system(size: 22, weight: .black, design: .rounded))
+                            .foregroundColor(.white)
                     }
-                    Text("Picture-in-Picture Tactical In-Game Overlay")
-                        .font(.caption)
-                        .foregroundColor(ColorTheme.textSecondary)
+                    Text("Picture-in-Picture In-Game Crosshair & Stat Overlay")
+                        .font(.system(size: 12))
+                        .foregroundColor(SensiTheme.textSecondary)
                 }
                 .padding(.top, 16)
 
-                // Explanation Banner
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(ColorTheme.cyanAccent)
-                        Text("HOW FLOATING HUD WORKS ON IOS")
-                            .font(.system(size: 13, weight: .bold, design: .monospaced))
-                            .foregroundColor(ColorTheme.cyanAccent)
-                    }
-                    Text("Apple iOS does not allow raw screen overlay drawing over other apps. Sensi Bot Max uses the native **Picture-in-Picture (PiP)** engine to project a floating tactical HUD widget on top of Free Fire.")
-                        .font(.system(size: 13))
-                        .foregroundColor(ColorTheme.textSecondary)
-                        .lineSpacing(4)
-                }
-                .modifier(ColorTheme.CardModifier(borderColor: ColorTheme.cyanAccent.opacity(0.3)))
+                // Inline Player View (Required by iOS to anchor PiP)
+                VStack(spacing: 12) {
+                    Text("TACTICAL HUD PREVIEW")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                        .foregroundColor(SensiTheme.cyanAccent)
+                        .frame(maxWidth: .infinity, alignment: .leading)
 
-                // PiP Status Card
-                VStack(spacing: 16) {
-                    HStack {
-                        VStack(alignment: .leading, spacing: 4) {
-                            Text("OVERLAY STATUS")
-                                .font(.system(size: 12, weight: .bold, design: .monospaced))
-                                .foregroundColor(ColorTheme.textMuted)
-                            Text(pipManager.isPipActive ? "RUNNING IN BACKGROUND" : "IDLE / STOPPED")
-                                .font(.system(size: 16, weight: .black, design: .monospaced))
-                                .foregroundColor(pipManager.isPipActive ? ColorTheme.fairPlayGreen : ColorTheme.textSecondary)
-                        }
-                        Spacer()
-                        Circle()
-                            .fill(pipManager.isPipActive ? ColorTheme.fairPlayGreen : ColorTheme.rubyRed)
-                            .frame(width: 14, height: 14)
-                            .shadow(color: pipManager.isPipActive ? ColorTheme.fairPlayGreen : ColorTheme.rubyRed, radius: 6)
-                    }
+                    ZStack {
+                        PipPlayerPreviewView()
+                            .frame(height: 160)
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 12)
+                                    .stroke(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.rubyRed.opacity(0.6), lineWidth: 1.5)
+                            )
 
-                    Divider().background(ColorTheme.cardBorder)
-
-                    Button(action: {
                         if pipManager.isPipActive {
-                            pipManager.stopPip()
-                        } else {
-                            pipManager.startPip()
+                            VStack(spacing: 4) {
+                                Image(systemName: "pip.swap")
+                                    .font(.system(size: 28))
+                                    .foregroundColor(SensiTheme.fairPlayGreen)
+                                Text("FLOATING OVER GAME")
+                                    .font(.system(size: 12, weight: .black, design: .monospaced))
+                                    .foregroundColor(.white)
+                                Text("Switch to Free Fire now")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(SensiTheme.textSecondary)
+                            }
+                            .padding(12)
+                            .background(Color.black.opacity(0.75))
+                            .clipShape(RoundedRectangle(cornerRadius: 10))
                         }
+                    }
+
+                    // Launch / Stop Button
+                    Button(action: {
+                        pipManager.togglePip()
                     }) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             Image(systemName: pipManager.isPipActive ? "stop.circle.fill" : "play.circle.fill")
-                                .font(.title3)
+                                .font(.system(size: 18))
                             Text(pipManager.isPipActive ? "STOP FLOATING HUD" : "LAUNCH IN-GAME HUD")
-                                .font(.system(size: 15, weight: .bold, design: .monospaced))
+                                .font(.system(size: 14, weight: .black, design: .monospaced))
                         }
                         .foregroundColor(.white)
                         .frame(maxWidth: .infinity)
                         .padding(.vertical, 14)
                         .background(
                             LinearGradient(
-                                colors: pipManager.isPipActive ? [Color.gray, Color.black] : [ColorTheme.rubyRed, ColorTheme.rubyDark],
+                                colors: pipManager.isPipActive ? [Color.gray, Color.black] : [SensiTheme.rubyRed, SensiTheme.rubyDark],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
-                        .cornerRadius(12)
-                        .shadow(color: pipManager.isPipActive ? Color.clear : ColorTheme.rubyRed.opacity(0.5), radius: 8)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
                 }
-                .modifier(ColorTheme.CardModifier(borderColor: pipManager.isPipActive ? ColorTheme.fairPlayGreen.opacity(0.4) : ColorTheme.cardBorder))
+                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.glassBorder)
 
-                // Tactical Tips for Free Fire on iOS
-                VStack(alignment: .leading, spacing: 14) {
+                // How it works advice
+                VStack(alignment: .leading, spacing: 10) {
+                    HStack {
+                        Image(systemName: "info.circle.fill")
+                            .foregroundColor(SensiTheme.cyanAccent)
+                        Text("HOW FLOATING HUD WORKS ON IOS")
+                            .font(.system(size: 12, weight: .bold, design: .monospaced))
+                            .foregroundColor(SensiTheme.cyanAccent)
+                    }
+
+                    Text("1. Tap **LAUNCH IN-GAME HUD** above.\n2. Switch into **Free Fire**.\n3. The HUD widget will remain floating in the corner of your screen throughout your match.\n4. You can drag and reposition the floating HUD anywhere on your display.")
+                        .font(.system(size: 12))
+                        .foregroundColor(SensiTheme.textSecondary)
+                        .lineSpacing(4)
+                }
+                .gamingCard()
+
+                // Guided Access & Pro Tips
+                VStack(alignment: .leading, spacing: 12) {
                     Text("TACTICAL IOS RECOMMENDATIONS")
-                        .font(.system(size: 14, weight: .bold, design: .monospaced))
-                        .foregroundColor(ColorTheme.goldAccent)
+                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .foregroundColor(SensiTheme.goldAccent)
 
                     BulletRow(
                         icon: "lock.shield.fill",
                         title: "Enable Guided Access",
-                        detail: "Settings > Accessibility > Guided Access. Prevents accidental Control Center & Home Bar gestures during intensive swipe drags."
+                        detail: "Settings > Accessibility > Guided Access. Blocks home bar / control center swipes during upward drag flicks."
                     )
 
                     BulletRow(
                         icon: "aspectratio.fill",
-                        title: "Disable Display Zoom",
-                        detail: "Settings > Display & Brightness > View: Standard. Keeps physical PPI touch coordinates 1:1."
+                        title: "Standard Display Zoom",
+                        detail: "Settings > Display & Brightness > View: Standard for 1:1 physical PPI coordinate mapping."
                     )
 
                     BulletRow(
                         icon: "bolt.slash.fill",
-                        title: "Keep Low Power Mode OFF",
-                        detail: "Low Power Mode limits 120Hz ProMotion screens to 60Hz and cuts touch sampling rates."
+                        title: "Turn Off Low Power Mode",
+                        detail: "Low Power Mode limits ProMotion 120Hz screens to 60Hz and slows touch sampling."
                     )
                 }
-                .modifier(ColorTheme.CardModifier())
+                .gamingCard()
 
                 Spacer(minLength: 30)
             }
             .padding(.horizontal, 16)
         }
-        .background(ColorTheme.obsidianBlack.ignoresSafeArea())
+        .background(SensiTheme.voidBlack.ignoresSafeArea())
     }
 }
 
-struct BulletRow: View {
-    let icon: String
-    let title: String
-    let detail: String
+struct PipPlayerPreviewView: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let container = UIView()
+        container.backgroundColor = .black
+        if let playerLayer = PipOverlayManager.shared.playerLayer {
+            playerLayer.frame = CGRect(x: 0, y: 0, width: 320, height: 160)
+            container.layer.addSublayer(playerLayer)
+        }
+        return container
+    }
 
-    var body: some View {
-        HStack(alignment: .top, spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16))
-                .foregroundColor(ColorTheme.goldAccent)
-                .frame(width: 20)
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(ColorTheme.pureWhite)
-                Text(detail)
-                    .font(.system(size: 12))
-                    .foregroundColor(ColorTheme.textSecondary)
-                    .fixedSize(horizontal: false, vertical: true)
-            }
+    func updateUIView(_ uiView: UIView, context: Context) {
+        if let playerLayer = PipOverlayManager.shared.playerLayer {
+            playerLayer.frame = uiView.bounds
         }
     }
 }

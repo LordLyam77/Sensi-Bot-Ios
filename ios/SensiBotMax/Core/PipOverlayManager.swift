@@ -7,9 +7,10 @@ public final class PipOverlayManager: NSObject, ObservableObject {
 
     @Published public var isPipActive: Bool = false
     @Published public var isPipSupported: Bool = false
+    @Published public var statusMessage: String = "Ready"
 
+    public var playerLayer: AVPlayerLayer?
     private var pipController: AVPictureInPictureController?
-    private var playerLayer: AVPlayerLayer?
     private var player: AVQueuePlayer?
     private var looper: AVPlayerLooper?
 
@@ -29,29 +30,36 @@ public final class PipOverlayManager: NSObject, ObservableObject {
         }
     }
 
-    private func setupLoopingPipLayer() {
-        guard let sampleURL = Bundle.main.url(forResource: "pip_dummy", withExtension: "mp4") else {
+    public func setupLoopingPipLayer() {
+        guard let videoURL = PipVideoGenerator.getOrCreatePipVideoURL() else {
+            self.statusMessage = "Video asset generation failed"
             return
         }
 
-        let item = AVPlayerItem(url: sampleURL)
+        let item = AVPlayerItem(url: videoURL)
         let queuePlayer = AVQueuePlayer(playerItem: item)
+        queuePlayer.isMuted = true
         self.looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
         self.player = queuePlayer
 
         let layer = AVPlayerLayer(player: queuePlayer)
+        layer.videoGravity = .resizeAspectFill
         layer.frame = CGRect(x: 0, y: 0, width: 320, height: 180)
         self.playerLayer = layer
 
         if AVPictureInPictureController.isPictureInPictureSupported() {
             self.pipController = AVPictureInPictureController(playerLayer: layer)
             self.pipController?.delegate = self
+            if #available(iOS 14.2, *) {
+                self.pipController?.canStartPictureInPictureAutomaticallyFromInline = true
+            }
+            queuePlayer.play()
         }
     }
 
     public func startPip() {
         guard let controller = pipController else {
-            isPipActive = true
+            self.statusMessage = "PiP Controller not ready"
             return
         }
         player?.play()
@@ -59,10 +67,7 @@ public final class PipOverlayManager: NSObject, ObservableObject {
     }
 
     public func stopPip() {
-        guard let controller = pipController else {
-            isPipActive = false
-            return
-        }
+        guard let controller = pipController else { return }
         controller.stopPictureInPicture()
     }
 
@@ -77,15 +82,24 @@ public final class PipOverlayManager: NSObject, ObservableObject {
 
 extension PipOverlayManager: AVPictureInPictureControllerDelegate {
     public func pictureInPictureControllerWillStartPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        DispatchQueue.main.async { self.isPipActive = true }
+        DispatchQueue.main.async {
+            self.isPipActive = true
+            self.statusMessage = "HUD Floating Over Game"
+        }
     }
 
     public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
-        DispatchQueue.main.async { self.isPipActive = false }
+        DispatchQueue.main.async {
+            self.isPipActive = false
+            self.statusMessage = "HUD Closed"
+        }
     }
 
     public func pictureInPictureController(_ pictureInPictureController: AVPictureInPictureController, failedToStartPictureInPictureWithError error: Error) {
-        DispatchQueue.main.async { self.isPipActive = false }
+        DispatchQueue.main.async {
+            self.isPipActive = false
+            self.statusMessage = "PiP Failed: \(error.localizedDescription)"
+        }
         print("PiP failed: \(error.localizedDescription)")
     }
 }
