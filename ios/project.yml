@@ -1,0 +1,29 @@
+name: SensiBotMax
+options:
+  bundleIdPrefix: com.sensibotpro
+  deploymentTarget:
+    iOS: "15.0"
+targets:
+  SensiBotMax:
+    type: application
+    platform: iOS
+    deploymentTarget: "15.0"
+    sources:
+      - path: SensiBotMax
+        excludes:
+          - "App/Info.plist"
+    info:
+      path: SensiBotMax/App/Info.plist
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.sensibotpro.ios
+        PRODUCT_NAME: SensiBotMax
+        SWIFT_VERSION: "5.9"
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: SensiBotMax/App/Info.plist
+        CODE_SIGNING_ALLOWED: NO
+        CODE_SIGNING_REQUIRED: NO
+        CODE_SIGN_IDENTITY: ""
+        AD_HOC_CODE_SIGNING_ALLOWED: YES
+        ENABLE_BITCODE: NO
+        TARGETED_DEVICE_FAMILY: "1,2"

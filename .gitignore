@@ -1,0 +1,19 @@
+# Gradle & Android
+.gradle/
+build/
+app/build/
+local.properties
+*.apk
+*.aab
+.kotlin/
+
+# iOS
+ios/build/
+ios/DerivedData/
+*.xcarchive
+*.ipa
+.DS_Store
+
+# Keystore secrets
+keystore/*.jks
+keystore/*.keystore

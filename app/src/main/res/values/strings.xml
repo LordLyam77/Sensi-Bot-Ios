@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">SENSI BOT Pro</string>
+    <string name="tagline">Play Better. Aim Smarter.</string>
+    <string name="fair_play_motto">This is not a hack, it only optimizes your gameplay.</string>
+    <string name="fair_play_submotto">We don\'t play for you. We help you play better.</string>
+    <string name="starting_point_notice">Starting Point — Test and Adjust</string>
+    <string name="crosshair_warning">Visual reference only. No automatic aiming or target assistance.</string>
+</resources>

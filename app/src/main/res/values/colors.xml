@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="black_bg">#0B0B0E</color>
+    <color name="charcoal_surface">#14141D</color>
+    <color name="ruby_red">#FF2A4D</color>
+    <color name="ruby_red_dark">#B3122C</color>
+    <color name="white">#FFFFFF</color>
+    <color name="gray_text">#8E8E9B</color>
+</resources>

@@ -1,0 +1,119 @@
+=============================================================================
+             SENSI BOT MAX - SUPABASE SQL COMMANDS & QUERIES GUIDE
+=============================================================================
+Where to run these:
+1. Open your Supabase Dashboard (https://supabase.com/dashboard/project/xvmrtmyjnbxpsgpikths)
+2. Click on "SQL Editor" in the left sidebar.
+3. Paste any query below and click "RUN" (green button or Ctrl+Enter).
+
+=============================================================================
+1. GENERATING NEW LICENSE KEYS
+=============================================================================
+
+-- A. Create 1 custom key (with buyer's email/note)
+INSERT INTO public.licenses (key, buyer_email, status)
+VALUES ('SENSI-LYAM-9988-7711', 'customer@gmail.com', 'unused');
+
+-- B. Bulk Generate 5 random keys at once:
+INSERT INTO public.licenses (key, status)
+SELECT 
+  'SENSI-' || 
+  upper(substring(md5(random()::text) from 1 for 4)) || '-' ||
+  upper(substring(md5(random()::text) from 5 for 4)) || '-' ||
+  upper(substring(md5(random()::text) from 9 for 4)),
+  'unused'
+FROM generate_series(1, 5);
+
+-- (Tip: Change generate_series(1, 5) to (1, 10) or (1, 50) for 10 or 50 keys at once)
+
+=============================================================================
+2. VIEWING & CHECKING KEYS
+=============================================================================
+
+-- A. View ALL keys and their current status:
+SELECT 
+  key, 
+  status, 
+  buyer_email, 
+  device_info, 
+  bound_at, 
+  last_validated_at 
+FROM public.licenses 
+ORDER BY issued_at DESC;
+
+-- B. View ONLY ACTIVE (in-use / locked) keys:
+SELECT 
+  key, 
+  buyer_email, 
+  device_info, 
+  bound_at, 
+  last_validated_at 
+FROM public.licenses 
+WHERE status = 'active';
+
+-- C. View ONLY UNUSED (unsold / ready to send) keys:
+SELECT 
+  key, 
+  status, 
+  issued_at 
+FROM public.licenses 
+WHERE status = 'unused';
+
+-- D. Search for 1 specific key:
+SELECT * FROM public.licenses 
+WHERE key = 'PASTE_KEY_HERE';
+
+-- E. Search by buyer email:
+SELECT * FROM public.licenses 
+WHERE buyer_email ILIKE '%customer@gmail.com%';
+
+=============================================================================
+3. RESETTING A DEVICE KEY (BUYER CHANGED PHONE)
+=============================================================================
+When a buyer switches to a new phone and their app says
+"Device Mismatch", run either query to unbind their old phone:
+
+-- Method 1 (Quick function):
+SELECT reset_license_device('PASTE_KEY_HERE');
+
+-- Method 2 (Direct SQL update):
+UPDATE public.licenses
+SET device_id = NULL,
+    device_info = NULL,
+    status = 'unused',
+    bound_at = NULL
+WHERE key = 'PASTE_KEY_HERE';
+
+(The buyer can now open the app on their new phone and activate successfully!)
+
+=============================================================================
+4. BANNING / REVOKING A KEY (REFUND OR LEAKED KEY)
+=============================================================================
+If a buyer requests a refund or leaks their key, revoke it immediately.
+The app will instantly lock on their screen:
+
+UPDATE public.licenses
+SET status = 'revoked'
+WHERE key = 'PASTE_KEY_HERE';
+
+-- To unban/restore a revoked key:
+UPDATE public.licenses
+SET status = 'active'
+WHERE key = 'PASTE_KEY_HERE';
+
+=============================================================================
+5. DELETING A KEY COMPLETELY
+=============================================================================
+DELETE FROM public.licenses
+WHERE key = 'PASTE_KEY_HERE';
+
+=============================================================================
+6. QUICK DASHBOARD STATS (TOTAL ACTIVE, UNUSED, BANNED)
+=============================================================================
+SELECT 
+  count(*) AS total_keys,
+  count(*) FILTER (WHERE status = 'active') AS active_users,
+  count(*) FILTER (WHERE status = 'unused') AS unused_ready_to_sell,
+  count(*) FILTER (WHERE status = 'revoked') AS banned_or_refunded
+FROM public.licenses;
+=============================================================================
