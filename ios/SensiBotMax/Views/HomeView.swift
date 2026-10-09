@@ -160,7 +160,7 @@ public struct HomeView: View {
                         }
                     }
 
-                    Spacer(modifier = Modifier.height(30))
+                    Spacer(minLength: 30)
                 }
                 .padding(.horizontal, 16)
                 .padding(.top, 8)

@@ -103,7 +103,7 @@ public struct SensiFinderView: View {
                         .padding(.top, 10)
                 }
 
-                Spacer(modifier = Modifier.height(40))
+                Spacer(minLength: 40)
             }
             .padding(.horizontal, 16)
             .padding(.top, 10)
