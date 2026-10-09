@@ -22,7 +22,6 @@ jobs:
         run: |
           cd ios
           xcodegen generate
-          xcodebuild -list -project SensiBotMax.xcodeproj
 
       - name: Build SensiBotMax.app (xcodebuild)
         run: |
@@ -36,15 +35,8 @@ jobs:
             CODE_SIGNING_ALLOWED=NO \
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
-            AD_HOC_CODE_SIGNING_ALLOWED=YES 2>&1 | tee build.log
-
-      - name: Upload Debug Logs If Failed
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: ios/build.log
-          if-no-files-found: ignore
+            AD_HOC_CODE_SIGNING_ALLOWED=YES \
+            DEVELOPMENT_TEAM=""
 
       - name: Package into IPA Payload
         run: |
