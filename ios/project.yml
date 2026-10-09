@@ -3,6 +3,11 @@ options:
   bundleIdPrefix: com.sensibotpro
   deploymentTarget:
     iOS: "15.0"
+schemes:
+  SensiBotMax:
+    build:
+      targets:
+        SensiBotMax: all
 targets:
   SensiBotMax:
     type: application

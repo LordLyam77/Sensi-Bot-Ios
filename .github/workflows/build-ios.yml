@@ -22,6 +22,7 @@ jobs:
         run: |
           cd ios
           xcodegen generate
+          xcodebuild -list -project SensiBotMax.xcodeproj
 
       - name: Build SensiBotMax.app (xcodebuild)
         run: |
