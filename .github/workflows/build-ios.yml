@@ -5,6 +5,9 @@ on:
     branches: [ main, master ]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build-ios:
     name: Build Sensi Bot Max iOS IPA
@@ -40,18 +43,21 @@ jobs:
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" > ../xcodebuild_output.txt 2>&1
 
-      - name: Publish Diagnostics to Summary
-        if: always()
+      - name: Push Error Log to Git
+        if: steps.build_step.outcome != 'success'
         run: |
-          echo "### Xcodebuild Output" >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
-          cat xcodebuild_output.txt | tail -n 80 >> $GITHUB_STEP_SUMMARY
-          echo '```' >> $GITHUB_STEP_SUMMARY
+          git config user.name "github-actions"
+          git config user.email "actions@github.com"
+          git checkout -b build-log-branch
+          cp xcodebuild_output.txt build-error.log
+          git add build-error.log
+          git commit -m "ci: capture xcodebuild error log"
+          git push -f origin build-log-branch
 
       - name: Verify Build Succeeded
         if: steps.build_step.outcome != 'success'
         run: |
-          echo "Build step failed. View summary above."
+          echo "Build step failed. View build-error.log in build-log-branch."
           exit 1
 
       - name: Package into IPA Payload
