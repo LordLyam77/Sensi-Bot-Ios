@@ -94,7 +94,7 @@ public final class LicenseManager: ObservableObject {
         return (false, "Unable to validate license. Please check your network and try again.")
     }
 
-    private struct ValidationError {
+    private struct ValidationError: Error {
         let userMessage: String
         let isFatal: Bool
     }
