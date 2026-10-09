@@ -150,3 +150,26 @@ struct PipPlayerPreviewView: UIViewRepresentable {
         }
     }
 }
+
+struct BulletRow: View {
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(SensiTheme.goldAccent)
+                .font(.system(size: 14))
+                .frame(width: 20)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                Text(detail)
+                    .font(.system(size: 11))
+                    .foregroundColor(SensiTheme.textSecondary)
+            }
+        }
+    }
+}

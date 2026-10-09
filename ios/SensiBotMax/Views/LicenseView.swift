@@ -112,9 +112,9 @@ struct LicenseView: View {
                     Button(action: {
                         guard !inputKey.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else { return }
                         Task {
-                            let success = await licenseManager.activateKey(inputKey)
+                            let (success, message) = await licenseManager.activateKey(inputKey)
                             if !success {
-                                errorMessage = "Invalid or expired key. Join Discord for an authentic VIP license."
+                                errorMessage = message
                                 showingErrorAlert = true
                             }
                         }
