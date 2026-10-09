@@ -24,6 +24,8 @@ jobs:
           xcodegen generate
 
       - name: Build SensiBotMax.app (xcodebuild)
+        id: build_step
+        continue-on-error: true
         run: |
           cd ios
           xcodebuild -project SensiBotMax.xcodeproj \
@@ -36,7 +38,19 @@ jobs:
             CODE_SIGNING_REQUIRED=NO \
             CODE_SIGN_IDENTITY="" \
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
-            DEVELOPMENT_TEAM=""
+            DEVELOPMENT_TEAM="" > ../xcodebuild_output.txt 2>&1
+
+      - name: Display Xcodebuild Diagnostics
+        run: |
+          echo "=== LAST 120 LINES OF XCODEBUILD OUTPUT ==="
+          tail -n 120 xcodebuild_output.txt
+          echo "=========================================="
+
+      - name: Verify Build Succeeded
+        if: steps.build_step.outcome != 'success'
+        run: |
+          echo "Build step failed. Inspect diagnostics above."
+          exit 1
 
       - name: Package into IPA Payload
         run: |
