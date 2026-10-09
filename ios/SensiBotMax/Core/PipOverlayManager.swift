@@ -30,8 +30,6 @@ public final class PipOverlayManager: NSObject, ObservableObject {
     }
 
     private func setupLoopingPipLayer() {
-        // Generate a minimal silent looping video asset or dynamic frame asset
-        // for AVPictureInPictureController to hold the floating window over other apps
         guard let sampleURL = Bundle.main.url(forResource: "pip_dummy", withExtension: "mp4") else {
             return
         }
@@ -51,13 +49,28 @@ public final class PipOverlayManager: NSObject, ObservableObject {
         }
     }
 
+    public func startPip() {
+        guard let controller = pipController else {
+            isPipActive = true
+            return
+        }
+        player?.play()
+        controller.startPictureInPicture()
+    }
+
+    public func stopPip() {
+        guard let controller = pipController else {
+            isPipActive = false
+            return
+        }
+        controller.stopPictureInPicture()
+    }
+
     public func togglePip() {
-        guard let controller = pipController else { return }
-        if controller.isPictureInPictureActive {
-            controller.stopPictureInPicture()
+        if isPipActive {
+            stopPip()
         } else {
-            player?.play()
-            controller.startPictureInPicture()
+            startPip()
         }
     }
 }
