@@ -17,6 +17,10 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      - name: Select Xcode 15.4
+        run: |
+          sudo xcode-select -s /Applications/Xcode_15.4.app
+
       - name: Install XcodeGen
         run: |
           brew install xcodegen
@@ -43,21 +47,16 @@ jobs:
             AD_HOC_CODE_SIGNING_ALLOWED=YES \
             DEVELOPMENT_TEAM="" > ../xcodebuild_output.txt 2>&1
 
-      - name: Push Error Log to Git
+      - name: Push Error Log If Failed
         if: steps.build_step.outcome != 'success'
         run: |
           git config user.name "github-actions"
           git config user.email "actions@github.com"
-          git checkout -b build-log-branch
+          git checkout -B build-log-branch
           cp xcodebuild_output.txt build-error.log
           git add build-error.log
           git commit -m "ci: capture xcodebuild error log"
           git push -f origin build-log-branch
-
-      - name: Verify Build Succeeded
-        if: steps.build_step.outcome != 'success'
-        run: |
-          echo "Build step failed. View build-error.log in build-log-branch."
           exit 1
 
       - name: Package into IPA Payload
