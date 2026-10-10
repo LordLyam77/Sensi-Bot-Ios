@@ -21,7 +21,9 @@ public struct SensiBotView: View {
     public var body: some View {
         VStack(spacing: 0) {
             // Header
-            HStack {
+            HStack(spacing: 12) {
+                SensiLogoView(size: 30)
+
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 6) {
                         Text("SENSI BOT")

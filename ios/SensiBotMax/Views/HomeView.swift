@@ -70,38 +70,40 @@ public struct HomeView: View {
 
     // MARK: - 1. Branding Header
     private var brandingHeader: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                HStack(spacing: 8) {
+        HStack(spacing: 12) {
+            SensiLogoView(size: 36)
+
+            VStack(alignment: .leading, spacing: 3) {
+                HStack(spacing: 6) {
                     Text("SENSI BOT")
-                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .font(.system(size: 22, weight: .black, design: .rounded))
                         .foregroundColor(.white)
                     Text("PRO")
-                        .font(.system(size: 11, weight: .black, design: .rounded))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
+                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
                         .background(SensiTheme.rubyRed)
                         .foregroundColor(.white)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
                     Text("iOS")
-                        .font(.system(size: 11, weight: .black, design: .rounded))
-                        .padding(.horizontal, 6)
-                        .padding(.vertical, 3)
+                        .font(.system(size: 10, weight: .black, design: .rounded))
+                        .padding(.horizontal, 5)
+                        .padding(.vertical, 2)
                         .background(SensiTheme.cyanAccent.opacity(0.18))
                         .foregroundColor(SensiTheme.cyanAccent)
                         .overlay(
-                            RoundedRectangle(cornerRadius: 6)
+                            RoundedRectangle(cornerRadius: 5)
                                 .stroke(SensiTheme.cyanAccent.opacity(0.5), lineWidth: 1)
                         )
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                        .clipShape(RoundedRectangle(cornerRadius: 5))
                 }
-                Text("Lyam FF Official iOS Edition • Physical PPI Calibrator")
-                    .font(.system(size: 12))
+                Text("Lyam FF Official iOS Edition • V1 Release")
+                    .font(.system(size: 11))
                     .foregroundColor(SensiTheme.textSecondary)
             }
             Spacer()
             Image(systemName: "shield.checkered")
-                .font(.system(size: 22))
+                .font(.system(size: 20))
                 .foregroundColor(SensiTheme.greenFairPlay)
         }
         .padding(.top, 4)

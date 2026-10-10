@@ -174,6 +174,19 @@ public struct ProfileView: View {
                 }
                 .gamingCard(borderColor: SensiTheme.cyanAccent.opacity(0.3))
 
+                // App Version & Official V1 Release Footer
+                VStack(spacing: 6) {
+                    SensiLogoView(size: 24, withGlow: false)
+                    Text("SENSI BOT MAX FOR iOS")
+                        .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .foregroundColor(SensiTheme.textMuted)
+                    Text("Version 1.0.0 (Build 1) • Official V1 Release")
+                        .font(.system(size: 10, design: .monospaced))
+                        .foregroundColor(SensiTheme.cyanAccent.opacity(0.8))
+                }
+                .padding(.top, 8)
+                .frame(maxWidth: .infinity)
+
                 Spacer(minLength: 30)
             }
             .padding(.horizontal, 16)

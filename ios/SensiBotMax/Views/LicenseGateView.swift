@@ -13,17 +13,15 @@ public struct LicenseGateView: View {
             VStack(spacing: 24) {
                 Spacer(minLength: 40)
 
-                // 1. Logo / Shield
+                // 1. App Logo Badge
                 ZStack {
                     Circle()
                         .fill(SensiTheme.rubyRed.opacity(0.12))
-                        .frame(width: 80, height: 80)
+                        .frame(width: 86, height: 86)
                     Circle()
-                        .stroke(SensiTheme.rubyRed, lineWidth: 2)
-                        .frame(width: 80, height: 80)
-                    Image(systemName: "key.fill")
-                        .font(.system(size: 36))
-                        .foregroundColor(SensiTheme.rubyRed)
+                        .stroke(SensiTheme.rubyRed.opacity(0.5), lineWidth: 1.5)
+                        .frame(width: 86, height: 86)
+                    SensiLogoView(size: 62)
                 }
 
                 // 2. Titles

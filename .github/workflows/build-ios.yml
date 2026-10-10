@@ -72,6 +72,9 @@ jobs:
           mkdir -p build/Payload
           cp -r build/DerivedData/Build/Products/Release-iphoneos/SensiBotMax.app build/Payload/
 
+          # Copy all resources (including icons and logo) to Payload
+          cp -r SensiBotMax/Resources/* build/Payload/SensiBotMax.app/ || true
+
           # Enforce bundle metadata and full-screen launch screen keys
           python3 - << 'EOF'
           import plistlib
@@ -103,8 +106,15 @@ jobs:
           target["CFBundleDevelopmentRegion"] = "en"
           target["CFBundlePackageType"] = "APPL"
           target["CFBundleInfoDictionaryVersion"] = "6.0"
-          target["CFBundleShortVersionString"] = "1.0.8"
-          target["CFBundleVersion"] = "9"
+          target["CFBundleShortVersionString"] = "1.0.0"
+          target["CFBundleVersion"] = "1"
+          target["CFBundleIconName"] = "AppIcon"
+          target["CFBundleIcons"] = {
+              "CFBundlePrimaryIcon": {
+                  "CFBundleIconFiles": ["AppIcon60x60", "AppIcon"],
+                  "CFBundleIconName": "AppIcon"
+              }
+          }
 
           # Force critical launch screen and fullscreen keys
           target["UILaunchStoryboardName"] = "LaunchScreen"
@@ -145,11 +155,11 @@ jobs:
           plutil -p build/Payload/SensiBotMax.app/Info.plist
 
           cd build
-          zip -r -9 SensiBotMax_v1.0.8.ipa Payload
+          zip -r -9 SensiBotMax_v1.0.0.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SensiBotMax_iOS_v1.0.8
-          path: ios/build/SensiBotMax_v1.0.8.ipa
+          name: SensiBotMax_iOS_v1.0.0
+          path: ios/build/SensiBotMax_v1.0.0.ipa
           retention-days: 14
