@@ -253,3 +253,27 @@ public struct FloatingAssistantView: View {
         .gamingCard()
     }
 }
+
+struct BulletRow: View {
+    let icon: String
+    let title: String
+    let detail: String
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(SensiTheme.goldAccent)
+                .font(.system(size: 13))
+                .frame(width: 18)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(.white)
+                Text(detail)
+                    .font(.system(size: 10.5))
+                    .foregroundColor(SensiTheme.textSecondary)
+            }
+        }
+    }
+}
+
