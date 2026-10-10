@@ -25,38 +25,43 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        TabView(selection: $selectedTab) {
-            HomeView()
-                .tabItem {
-                    Label("CALIBRATOR", systemImage: "target")
-                }
-                .tag(0)
+        ZStack {
+            TabView(selection: $selectedTab) {
+                HomeView()
+                    .tabItem {
+                        Label("CALIBRATOR", systemImage: "target")
+                    }
+                    .tag(0)
 
-            SensiFinderView()
-                .tabItem {
-                    Label("FINDER", systemImage: "slider.horizontal.3")
-                }
-                .tag(1)
+                SensiFinderView()
+                    .tabItem {
+                        Label("FINDER", systemImage: "slider.horizontal.3")
+                    }
+                    .tag(1)
 
-            PipOverlayView()
-                .tabItem {
-                    Label("FLOAT HUD", systemImage: "pip.enter")
-                }
-                .tag(2)
+                PipOverlayView()
+                    .tabItem {
+                        Label("FLOAT HUD", systemImage: "pip.enter")
+                    }
+                    .tag(2)
 
-            SensiBotView()
-                .tabItem {
-                    Label("SENSI BOT", systemImage: "cpu.fill")
-                }
-                .tag(3)
+                SensiBotView()
+                    .tabItem {
+                        Label("SENSI BOT", systemImage: "cpu.fill")
+                    }
+                    .tag(3)
 
-            ProfileView()
-                .tabItem {
-                    Label("PROFILE", systemImage: "person.crop.circle")
-                }
-                .tag(4)
+                ProfileView()
+                    .tabItem {
+                        Label("PROFILE", systemImage: "person.crop.circle")
+                    }
+                    .tag(4)
+            }
+            .accentColor(SensiTheme.rubyRed)
+            .preferredColorScheme(.dark)
+
+            // iOSGods-style Floating Mod Menu Overlay (Floats over all tabs with edge-snapping)
+            FloatingModMenuOverlayView()
         }
-        .accentColor(SensiTheme.rubyRed)
-        .preferredColorScheme(.dark)
     }
 }

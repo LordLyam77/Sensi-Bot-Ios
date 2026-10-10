@@ -3,6 +3,7 @@ import AVKit
 
 struct PipOverlayView: View {
     @ObservedObject var pipManager = PipOverlayManager.shared
+    @ObservedObject var menuManager = FloatingMenuManager.shared
 
     var body: some View {
         ScrollView {
@@ -10,23 +11,104 @@ struct PipOverlayView: View {
                 // Header
                 VStack(spacing: 6) {
                     HStack {
-                        Image(systemName: "pip.enter")
+                        Image(systemName: "slider.horizontal.below.rectangle")
                             .font(.system(size: 24, weight: .bold))
                             .foregroundColor(SensiTheme.rubyRed)
-                        Text("FLOATING HUD")
+                        Text("FLOATING ASSISTANT")
                             .font(.system(size: 22, weight: .black, design: .rounded))
                             .foregroundColor(.white)
                     }
-                    Text("Picture-in-Picture In-Game Crosshair & Stat Overlay")
+                    Text("iOSGods-Style In-Game Tactical Mod Menu & Floating HUD")
                         .font(.system(size: 12))
                         .foregroundColor(SensiTheme.textSecondary)
                 }
                 .padding(.top, 16)
 
-                // Inline Player View (Anchors the PiP Window)
+                // ═════════════════════════════════════════════════════════════════════
+                //  1. FLOATING MOD MENU LAUNCHER (iOSGods-style Draggable Menu)
+                // ═════════════════════════════════════════════════════════════════════
+                VStack(alignment: .leading, spacing: 14) {
+                    HStack {
+                        Image(systemName: "app.badge.checkmark")
+                            .foregroundColor(SensiTheme.rubyRed)
+                        Text("FLOATING MOD MENU")
+                            .font(.system(size: 13, weight: .black, design: .monospaced))
+                            .foregroundColor(.white)
+                        Spacer()
+                        Toggle("", isOn: $menuManager.isMenuEnabled)
+                            .labelsHidden()
+                            .toggleStyle(SwitchToggleStyle(tint: SensiTheme.rubyRed))
+                    }
+
+                    Text("A draggable floating launcher that snaps smoothly to your screen edges. Tap it anytime to expand the custom iOSGods-style mod menu panel with live sensitivity sliders, character target zones, and crosshairs.")
+                        .font(.system(size: 11))
+                        .foregroundColor(SensiTheme.textSecondary)
+                        .lineSpacing(2)
+
+                    HStack(spacing: 10) {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                                menuManager.isMenuEnabled = true
+                                menuManager.isExpanded = true
+                            }
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.up.left.and.arrow.down.right")
+                                Text("OPEN MOD MENU")
+                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                            }
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(SensiTheme.rubyRed)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+
+                        Button(action: {
+                            menuManager.savePosition(x: 320, y: 220)
+                            let haptic = UIImpactFeedbackGenerator(style: .light)
+                            haptic.impactOccurred()
+                        }) {
+                            HStack(spacing: 6) {
+                                Image(systemName: "arrow.counterclockwise")
+                                Text("RESET POSITION")
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            }
+                            .foregroundColor(SensiTheme.cyanAccent)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 10)
+                            .background(Color.white.opacity(0.08))
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                        }
+                    }
+
+                    // Status pill
+                    HStack {
+                        Circle()
+                            .fill(menuManager.isMenuEnabled ? Color(red: 0.0, green: 0.9, blue: 0.46) : Color.gray)
+                            .frame(width: 8, height: 8)
+                        Text(menuManager.isMenuEnabled ? "LAUNCHER FLOATING ON SCREEN" : "LAUNCHER HIDDEN")
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(menuManager.isMenuEnabled ? Color(red: 0.0, green: 0.9, blue: 0.46) : SensiTheme.textMuted)
+                        Spacer()
+                        Text("DRAG & SNAP TO EDGE")
+                            .font(.system(size: 9, weight: .bold, design: .monospaced))
+                            .foregroundColor(SensiTheme.goldAccent)
+                    }
+                    .padding(8)
+                    .background(Color.black.opacity(0.3))
+                    .clipShape(RoundedRectangle(cornerRadius: 6))
+                }
+                .gamingCard(borderColor: menuManager.isMenuEnabled ? SensiTheme.rubyRed.opacity(0.6) : SensiTheme.glassBorder)
+
+                // ═════════════════════════════════════════════════════════════════════
+                //  2. IN-GAME PiP FLOATING OVERLAY (Picture-in-Picture)
+                // ═════════════════════════════════════════════════════════════════════
                 VStack(spacing: 12) {
                     HStack {
-                        Text("TACTICAL HUD PREVIEW")
+                        Image(systemName: "pip.enter")
+                            .foregroundColor(SensiTheme.cyanAccent)
+                        Text("PICTURE-IN-PICTURE (OVER FREE FIRE)")
                             .font(.system(size: 11, weight: .black, design: .monospaced))
                             .foregroundColor(SensiTheme.cyanAccent)
                         Spacer()
@@ -69,7 +151,7 @@ struct PipOverlayView: View {
                         HStack(spacing: 10) {
                             Image(systemName: pipManager.isPipActive ? "stop.circle.fill" : "play.circle.fill")
                                 .font(.system(size: 18))
-                            Text(pipManager.isPipActive ? "STOP FLOATING HUD" : "LAUNCH IN-GAME HUD")
+                            Text(pipManager.isPipActive ? "STOP IN-GAME HUD" : "LAUNCH HUD OVER GAME")
                                 .font(.system(size: 14, weight: .black, design: .monospaced))
                         }
                         .foregroundColor(.white)
@@ -86,26 +168,11 @@ struct PipOverlayView: View {
                         .shadow(color: (pipManager.isPipActive ? Color.clear : SensiTheme.rubyRed.opacity(0.4)), radius: 8, x: 0, y: 3)
                     }
                 }
-                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.rubyRed.opacity(0.4))
+                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.cyanAccent.opacity(0.4))
 
-                // How it works advice
-                VStack(alignment: .leading, spacing: 10) {
-                    HStack {
-                        Image(systemName: "info.circle.fill")
-                            .foregroundColor(SensiTheme.cyanAccent)
-                        Text("HOW FLOATING HUD WORKS ON IOS")
-                            .font(.system(size: 12, weight: .bold, design: .monospaced))
-                            .foregroundColor(SensiTheme.cyanAccent)
-                    }
-
-                    Text("1. Tap **LAUNCH IN-GAME HUD** above (or simply swipe up to Home).\n2. Switch to **Free Fire**.\n3. The crosshair widget remains floating in the corner of your screen throughout your match.\n4. You can drag, resize (pinch to zoom), or dock the HUD to the screen edge.")
-                        .font(.system(size: 12))
-                        .foregroundColor(SensiTheme.textSecondary)
-                        .lineSpacing(4)
-                }
-                .gamingCard()
-
-                // Guided Access & Pro Tips
+                // ═════════════════════════════════════════════════════════════════════
+                //  3. TACTICAL RECOMMENDATIONS
+                // ═════════════════════════════════════════════════════════════════════
                 VStack(alignment: .leading, spacing: 12) {
                     Text("TACTICAL IOS RECOMMENDATIONS")
                         .font(.system(size: 13, weight: .black, design: .monospaced))
