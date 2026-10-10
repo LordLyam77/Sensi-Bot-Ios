@@ -59,7 +59,10 @@ class SecureDeviceManager(private val context: Context) {
             "UNKNOWN_ANDROID_ID"
         }
 
-        val rawSeed = "$androidId-${UUID.randomUUID()}"
+        // Deterministic hardware seed derived from permanent Android ID and hardware signature.
+        // Reinstalling on the SAME device produces the exact same ID, letting buyers log back in.
+        // A different device with a different ANDROID_ID produces a different ID and is blocked by Supabase.
+        val rawSeed = "$androidId-SENSI-HWID-${android.os.Build.MANUFACTURER.uppercase()}-${android.os.Build.MODEL.uppercase()}"
         val digest = MessageDigest.getInstance("SHA-256").digest(rawSeed.toByteArray())
         val hexString = digest.joinToString("") { "%02x".format(it) }.take(24).uppercase()
         val generatedId = "DEV-$hexString"
