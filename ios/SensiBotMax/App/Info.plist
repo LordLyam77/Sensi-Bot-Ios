@@ -7,7 +7,7 @@
 	<key>CFBundleDisplayName</key>
 	<string>Sensi Bot Max</string>
 	<key>CFBundleExecutable</key>
-	<string>$(EXECUTABLE_NAME)</string>
+	<string>SensiBotMax</string>
 	<key>CFBundleIdentifier</key>
 	<string>com.sensibotpro.ios</string>
 	<key>CFBundleInfoDictionaryVersion</key>

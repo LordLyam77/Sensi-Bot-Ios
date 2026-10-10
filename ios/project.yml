@@ -14,7 +14,11 @@ targets:
     info:
       path: SensiBotMax/App/Info.plist
       properties:
+        CFBundleIdentifier: "com.sensibotpro.ios"
+        CFBundleExecutable: "SensiBotMax"
+        CFBundleName: "SensiBotMax"
         CFBundleDisplayName: "Sensi Bot Max"
+        CFBundleDevelopmentRegion: "en"
         CFBundleShortVersionString: "1.0.2"
         CFBundleVersion: "3"
         UILaunchStoryboardName: LaunchScreen
@@ -34,6 +38,7 @@ targets:
         SWIFT_VERSION: "5.9"
         GENERATE_INFOPLIST_FILE: YES
         INFOPLIST_FILE: SensiBotMax/App/Info.plist
+        INFOPLIST_KEY_CFBundleIdentifier: "com.sensibotpro.ios"
         INFOPLIST_KEY_CFBundleDisplayName: "Sensi Bot Max"
         INFOPLIST_KEY_UILaunchStoryboardName: LaunchScreen
         INFOPLIST_KEY_UIRequiresFullScreen: YES

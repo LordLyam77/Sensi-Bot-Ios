@@ -72,10 +72,11 @@ jobs:
           mkdir -p build/Payload
           cp -r build/DerivedData/Build/Products/Release-iphoneos/SensiBotMax.app build/Payload/
 
-          # Enforce UILaunchStoryboardName, UIRequiresFullScreen, and app bundle metadata
+          # Enforce bundle metadata and full-screen launch screen keys
           python3 - << 'EOF'
           import plistlib
           import os
+          import sys
 
           info_path = "build/Payload/SensiBotMax.app/Info.plist"
           src_path = "SensiBotMax/App/Info.plist"
@@ -94,23 +95,48 @@ jobs:
           for k, v in source.items():
               target[k] = v
 
+          # Explicit concrete identification values (NEVER unexpanded $(...) variables)
+          target["CFBundleIdentifier"] = "com.sensibotpro.ios"
+          target["CFBundleExecutable"] = "SensiBotMax"
+          target["CFBundleName"] = "SensiBotMax"
+          target["CFBundleDisplayName"] = "Sensi Bot Max"
+          target["CFBundleDevelopmentRegion"] = "en"
+          target["CFBundlePackageType"] = "APPL"
+          target["CFBundleInfoDictionaryVersion"] = "6.0"
+          target["CFBundleShortVersionString"] = "1.0.2"
+          target["CFBundleVersion"] = "3"
+
           # Force critical launch screen and fullscreen keys
           target["UILaunchStoryboardName"] = "LaunchScreen"
           target["UIRequiresFullScreen"] = True
           target["UILaunchScreen"] = {"UILaunchStoryboardName": "LaunchScreen"}
-          target["CFBundleDisplayName"] = "Sensi Bot Max"
-          target["CFBundleShortVersionString"] = "1.0.2"
-          target["CFBundleVersion"] = "3"
           target["LSRequiresIPhoneOS"] = True
           target["CADisableMinimumFrameDurationOnPhone"] = True
           target["UIUserInterfaceStyle"] = "Dark"
           target["UISupportedInterfaceOrientations"] = ["UIInterfaceOrientationPortrait"]
 
+          # Variable expansion / cleanup for any remaining $(...) variables
+          var_map = {
+              "$(PRODUCT_BUNDLE_IDENTIFIER)": "com.sensibotpro.ios",
+              "$(EXECUTABLE_NAME)": "SensiBotMax",
+              "$(PRODUCT_NAME)": "SensiBotMax",
+              "$(DEVELOPMENT_LANGUAGE)": "en",
+          }
+          for k, v in list(target.items()):
+              if isinstance(v, str):
+                  for var_key, var_val in var_map.items():
+                      if var_key in v:
+                          v = v.replace(var_key, var_val)
+                          target[k] = v
+                  if "$(" in v:
+                      print(f"ERROR: Unresolved variable remaining in key {k}: {v}")
+                      sys.exit(1)
+
           with open(info_path, "wb") as f:
               plistlib.dump(target, f)
 
-          print("Successfully injected full-screen Info.plist:")
-          for k in ["CFBundleDisplayName", "CFBundleShortVersionString", "UILaunchStoryboardName", "UIRequiresFullScreen", "UILaunchScreen"]:
+          print("Successfully injected valid Info.plist:")
+          for k in ["CFBundleIdentifier", "CFBundleExecutable", "CFBundleName", "CFBundleDisplayName", "CFBundleShortVersionString", "UILaunchStoryboardName", "UIRequiresFullScreen"]:
               print(f"  {k}: {target.get(k)}")
           EOF
 
