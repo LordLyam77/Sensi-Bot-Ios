@@ -12,6 +12,10 @@ public final class FloatingHudView: UIView {
     private let lineLeft = UIView()
     private let lineRight = UIView()
 
+    public override var intrinsicContentSize: CGSize {
+        return CGSize(width: 280, height: 160)
+    }
+
     public override init(frame: CGRect) {
         super.init(frame: frame)
         setupView()
@@ -37,7 +41,7 @@ public final class FloatingHudView: UIView {
         headerStack.translatesAutoresizingMaskIntoConstraints = false
         addSubview(headerStack)
 
-        titleLabel.text = "⚡ SENSI BOT PRO"
+        titleLabel.text = "⚡ LYAM FF • ASSISTANT"
         titleLabel.font = UIFont.monospacedSystemFont(ofSize: 11, weight: .black)
         titleLabel.textColor = .white
 
@@ -156,5 +160,10 @@ public final class FloatingHudView: UIView {
     public func updateSensitivity(general: Int, redDot: Int, scope2x: Int, scope4x: Int, hz: Int) {
         statsLabel.text = "GEN:\(general)  RED:\(redDot)  2X:\(scope2x)  4X:\(scope4x)"
         hzBadge.text = "\(hz)Hz"
+    }
+
+    public func updateZone(name: String, color: UIColor = UIColor(red: 0.0, green: 0.9, blue: 0.46, alpha: 1.0)) {
+        statusBadge.text = "● \(name) LOCK"
+        statusBadge.textColor = color
     }
 }

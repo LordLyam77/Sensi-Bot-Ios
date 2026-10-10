@@ -1,11 +1,15 @@
 import SwiftUI
 import AVKit
 
-struct PipOverlayView: View {
+public typealias PipOverlayView = FloatingAssistantView
+
+public struct FloatingAssistantView: View {
     @ObservedObject var pipManager = PipOverlayManager.shared
     @ObservedObject var menuManager = FloatingMenuManager.shared
 
-    var body: some View {
+    public init() {}
+
+    public var body: some View {
         ScrollView {
             VStack(spacing: 20) {
                 // Header
@@ -18,20 +22,115 @@ struct PipOverlayView: View {
                             .font(.system(size: 22, weight: .black, design: .rounded))
                             .foregroundColor(.white)
                     }
-                    Text("iOSGods-Style In-Game Tactical Mod Menu & Floating HUD")
+                    Text("Real-Time In-Game Tactical Sensitivity Assistant • Fair Play")
                         .font(.system(size: 12))
                         .foregroundColor(SensiTheme.textSecondary)
                 }
                 .padding(.top, 16)
 
                 // ═════════════════════════════════════════════════════════════════════
-                //  1. FLOATING MOD MENU LAUNCHER (iOSGods-style Draggable Menu)
+                //  1. FLOAT OVER FREE FIRE (IN-GAME FLOATING ASSISTANT)
+                // ═════════════════════════════════════════════════════════════════════
+                VStack(spacing: 14) {
+                    HStack {
+                        Image(systemName: "scope")
+                            .foregroundColor(SensiTheme.rubyRed)
+                        Text("FLOAT OVER FREE FIRE (IN-GAME)")
+                            .font(.system(size: 12, weight: .black, design: .monospaced))
+                            .foregroundColor(.white)
+                        Spacer()
+                        HStack(spacing: 4) {
+                            Circle()
+                                .fill(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.cyanAccent)
+                                .frame(width: 7, height: 7)
+                            Text(pipManager.isPipActive ? "ACTIVE OVER GAME" : "READY - STANDBY")
+                                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                                .foregroundColor(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.cyanAccent)
+                        }
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 3)
+                        .background((pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.cyanAccent).opacity(0.12))
+                        .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+
+                    // Tactical HUD Status Card
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("AIM LOCK TARGET")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(SensiTheme.textMuted)
+                                Text(menuManager.activeZone.title)
+                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                    .foregroundColor(menuManager.activeZone.color)
+                            }
+                            Spacer()
+                            VStack(alignment: .trailing, spacing: 3) {
+                                Text("REFRESH RATE")
+                                    .font(.system(size: 9, weight: .bold, design: .monospaced))
+                                    .foregroundColor(SensiTheme.textMuted)
+                                Text("\(Int(DeviceProbe.current().maxFPS))Hz PROMOTION")
+                                    .font(.system(size: 13, weight: .black, design: .monospaced))
+                                    .foregroundColor(SensiTheme.cyanAccent)
+                            }
+                        }
+
+                        Divider().background(Color.white.opacity(0.1))
+
+                        HStack(spacing: 12) {
+                            HudMetricChip(label: "GEN", val: "\(Int(menuManager.generalSensi))")
+                            HudMetricChip(label: "RED", val: "\(Int(menuManager.redDotSensi))")
+                            HudMetricChip(label: "2X", val: "\(Int(menuManager.scope2xSensi))")
+                            HudMetricChip(label: "4X", val: "\(Int(menuManager.scope4xSensi))")
+                            HudMetricChip(label: "BTN", val: "\(Int(menuManager.fireButtonSize))%")
+                        }
+
+                        Text("⚡ When active, your Floating Assistant stays smoothly pinned on screen over Free Fire whenever you minimize or switch outside this app.")
+                            .font(.system(size: 10.5))
+                            .foregroundColor(SensiTheme.textSecondary)
+                            .lineSpacing(2)
+                    }
+                    .padding(12)
+                    .background(Color.black.opacity(0.35))
+                    .clipShape(RoundedRectangle(cornerRadius: 10))
+                    .overlay(RoundedRectangle(cornerRadius: 10).stroke(Color.white.opacity(0.08), lineWidth: 1))
+
+                    // Launch / Stop In-Game Assistant Button
+                    Button(action: {
+                        let haptic = UIImpactFeedbackGenerator(style: .medium)
+                        haptic.impactOccurred()
+                        pipManager.togglePip()
+                    }) {
+                        HStack(spacing: 10) {
+                            Image(systemName: pipManager.isPipActive ? "stop.circle.fill" : "play.circle.fill")
+                                .font(.system(size: 18))
+                            Text(pipManager.isPipActive ? "STOP IN-GAME ASSISTANT" : "ACTIVATE IN-GAME FLOATING ASSISTANT")
+                                .font(.system(size: 12, weight: .black, design: .monospaced))
+                        }
+                        .foregroundColor(.white)
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 14)
+                        .background(
+                            LinearGradient(
+                                colors: pipManager.isPipActive ? [Color.gray, Color.black] : [SensiTheme.rubyRed, SensiTheme.rubyDark],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: (pipManager.isPipActive ? Color.clear : SensiTheme.rubyRed.opacity(0.4)), radius: 8, x: 0, y: 3)
+                    }
+                }
+                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.6) : SensiTheme.rubyRed.opacity(0.5))
+
+                // ═════════════════════════════════════════════════════════════════════
+                //  2. FLOATING ASSISTANT LAUNCHER (In-App Draggable Widget)
                 // ═════════════════════════════════════════════════════════════════════
                 VStack(alignment: .leading, spacing: 14) {
                     HStack {
                         Image(systemName: "app.badge.checkmark")
                             .foregroundColor(SensiTheme.rubyRed)
-                        Text("FLOATING MOD MENU")
+                        Text("ON-SCREEN FLOATING LAUNCHER")
                             .font(.system(size: 13, weight: .black, design: .monospaced))
                             .foregroundColor(.white)
                         Spacer()
@@ -40,7 +139,7 @@ struct PipOverlayView: View {
                             .toggleStyle(SwitchToggleStyle(tint: SensiTheme.rubyRed))
                     }
 
-                    Text("A draggable floating launcher that snaps smoothly to your screen edges. Tap it anytime to expand the custom iOSGods-style mod menu panel with live sensitivity sliders, character target zones, and crosshairs.")
+                    Text("Draggable floating launcher with edge-snapping physics. Tap anytime inside the app to expand live sensitivity sliders, character target zones, and reticle customizers.")
                         .font(.system(size: 11))
                         .foregroundColor(SensiTheme.textSecondary)
                         .lineSpacing(2)
@@ -54,7 +153,7 @@ struct PipOverlayView: View {
                         }) {
                             HStack(spacing: 6) {
                                 Image(systemName: "arrow.up.left.and.arrow.down.right")
-                                Text("OPEN MOD MENU")
+                                Text("OPEN ASSISTANT PANEL")
                                     .font(.system(size: 11, weight: .black, design: .monospaced))
                             }
                             .foregroundColor(.white)
@@ -87,7 +186,7 @@ struct PipOverlayView: View {
                         Circle()
                             .fill(menuManager.isMenuEnabled ? Color(red: 0.0, green: 0.9, blue: 0.46) : Color.gray)
                             .frame(width: 8, height: 8)
-                        Text(menuManager.isMenuEnabled ? "LAUNCHER FLOATING ON SCREEN" : "LAUNCHER HIDDEN")
+                        Text(menuManager.isMenuEnabled ? "LAUNCHER PINNED ON SCREEN" : "LAUNCHER HIDDEN")
                             .font(.system(size: 10, weight: .bold, design: .monospaced))
                             .foregroundColor(menuManager.isMenuEnabled ? Color(red: 0.0, green: 0.9, blue: 0.46) : SensiTheme.textMuted)
                         Spacer()
@@ -102,80 +201,25 @@ struct PipOverlayView: View {
                 .gamingCard(borderColor: menuManager.isMenuEnabled ? SensiTheme.rubyRed.opacity(0.6) : SensiTheme.glassBorder)
 
                 // ═════════════════════════════════════════════════════════════════════
-                //  2. IN-GAME PiP FLOATING OVERLAY (Picture-in-Picture)
-                // ═════════════════════════════════════════════════════════════════════
-                VStack(spacing: 12) {
-                    HStack {
-                        Image(systemName: "pip.enter")
-                            .foregroundColor(SensiTheme.cyanAccent)
-                        Text("PICTURE-IN-PICTURE (OVER FREE FIRE)")
-                            .font(.system(size: 11, weight: .black, design: .monospaced))
-                            .foregroundColor(SensiTheme.cyanAccent)
-                        Spacer()
-                        Text(pipManager.statusMessage.uppercased())
-                            .font(.system(size: 10, weight: .bold, design: .monospaced))
-                            .foregroundColor(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.goldAccent)
-                            .padding(.horizontal, 6)
-                            .padding(.vertical, 2)
-                            .background((pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.goldAccent).opacity(0.12))
-                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                    }
-
-                    ZStack {
-                        PipPlayerPreviewView()
-                            .frame(height: 160)
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-
-                        if pipManager.isPipActive {
-                            VStack(spacing: 6) {
-                                Image(systemName: "pip.swap")
-                                    .font(.system(size: 28))
-                                    .foregroundColor(SensiTheme.fairPlayGreen)
-                                Text("HUD FLOATING OVER GAME")
-                                    .font(.system(size: 12, weight: .black, design: .monospaced))
-                                    .foregroundColor(.white)
-                                Text("Switch to Free Fire now — widget stays on screen")
-                                    .font(.system(size: 11))
-                                    .foregroundColor(SensiTheme.textSecondary)
-                            }
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            .background(Color.black.opacity(0.78))
-                            .clipShape(RoundedRectangle(cornerRadius: 14))
-                        }
-                    }
-
-                    // Launch / Stop Button
-                    Button(action: {
-                        pipManager.togglePip()
-                    }) {
-                        HStack(spacing: 10) {
-                            Image(systemName: pipManager.isPipActive ? "stop.circle.fill" : "play.circle.fill")
-                                .font(.system(size: 18))
-                            Text(pipManager.isPipActive ? "STOP IN-GAME HUD" : "LAUNCH HUD OVER GAME")
-                                .font(.system(size: 14, weight: .black, design: .monospaced))
-                        }
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 14)
-                        .background(
-                            LinearGradient(
-                                colors: pipManager.isPipActive ? [Color.gray, Color.black] : [SensiTheme.rubyRed, SensiTheme.rubyDark],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .shadow(color: (pipManager.isPipActive ? Color.clear : SensiTheme.rubyRed.opacity(0.4)), radius: 8, x: 0, y: 3)
-                    }
-                }
-                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.cyanAccent.opacity(0.4))
-
-                // ═════════════════════════════════════════════════════════════════════
-                //  3. TACTICAL RECOMMENDATIONS
+                //  3. TACTICAL RECOMMENDATIONS (FAIR PLAY & REACTION)
                 // ═════════════════════════════════════════════════════════════════════
                 VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Image(systemName: "checkmark.seal.fill")
+                            .foregroundColor(SensiTheme.fairPlayGreen)
+                        Text("100% FAIR PLAY • ANTI-BAN COMPLIANT")
+                            .font(.system(size: 12, weight: .black, design: .monospaced))
+                            .foregroundColor(SensiTheme.fairPlayGreen)
+                    }
+
+                    Text("Sensi Bot Max uses zero game file injection or memory alteration. All sensitivity curves and crosshairs operate strictly as an assistive tactical HUD.")
+                        .font(.system(size: 10.5))
+                        .foregroundColor(SensiTheme.textSecondary)
+
+                    Divider().background(Color.white.opacity(0.1))
+
                     Text("TACTICAL IOS RECOMMENDATIONS")
-                        .font(.system(size: 13, weight: .black, design: .monospaced))
+                        .font(.system(size: 12, weight: .black, design: .monospaced))
                         .foregroundColor(SensiTheme.goldAccent)
 
                     BulletRow(
@@ -206,29 +250,24 @@ struct PipOverlayView: View {
     }
 }
 
-struct PipPlayerPreviewView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let container = UIView()
-        container.backgroundColor = .clear
+struct HudMetricChip: View {
+    let label: String
+    let val: String
 
-        let hud = FloatingHudView(frame: .zero)
-        container.addSubview(hud)
-        hud.translatesAutoresizingMaskIntoConstraints = false
-        NSLayoutConstraint.activate([
-            hud.topAnchor.constraint(equalTo: container.topAnchor),
-            hud.bottomAnchor.constraint(equalTo: container.bottomAnchor),
-            hud.leadingAnchor.constraint(equalTo: container.leadingAnchor),
-            hud.trailingAnchor.constraint(equalTo: container.trailingAnchor)
-        ])
-
-        DispatchQueue.main.async {
-            PipOverlayManager.shared.attachSourceView(container)
+    var body: some View {
+        VStack(spacing: 2) {
+            Text(label)
+                .font(.system(size: 8, weight: .bold, design: .monospaced))
+                .foregroundColor(SensiTheme.textMuted)
+            Text(val)
+                .font(.system(size: 11, weight: .black, design: .monospaced))
+                .foregroundColor(.white)
         }
-
-        return container
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 6)
+        .background(Color.white.opacity(0.06))
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 struct BulletRow: View {

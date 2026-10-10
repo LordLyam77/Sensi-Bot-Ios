@@ -1,4 +1,5 @@
 import SwiftUI
+import UIKit
 
 struct MainTabView: View {
     @State private var selectedTab: Int = 0
@@ -26,6 +27,13 @@ struct MainTabView: View {
 
     var body: some View {
         ZStack {
+            // 1. Permanent background anchor for in-game Floating Assistant (Always attached)
+            FloatingAssistantAnchorView()
+                .frame(width: 4, height: 4)
+                .opacity(0.01)
+                .allowsHitTesting(false)
+
+            // 2. Main Tab View
             TabView(selection: $selectedTab) {
                 HomeView()
                     .tabItem {
@@ -39,9 +47,9 @@ struct MainTabView: View {
                     }
                     .tag(1)
 
-                PipOverlayView()
+                FloatingAssistantView()
                     .tabItem {
-                        Label("FLOAT HUD", systemImage: "pip.enter")
+                        Label("ASSISTANT", systemImage: "slider.horizontal.below.rectangle")
                     }
                     .tag(2)
 
@@ -60,8 +68,21 @@ struct MainTabView: View {
             .accentColor(SensiTheme.rubyRed)
             .preferredColorScheme(.dark)
 
-            // iOSGods-style Floating Mod Menu Overlay (Floats over all tabs with edge-snapping)
-            FloatingModMenuOverlayView()
+            // 3. Floating Assistant Overlay (Draggable launcher & expanded panel)
+            FloatingAssistantOverlayView()
         }
     }
+}
+
+struct FloatingAssistantAnchorView: UIViewRepresentable {
+    func makeUIView(context: Context) -> UIView {
+        let view = UIView(frame: CGRect(x: 0, y: 0, width: 280, height: 160))
+        view.backgroundColor = .clear
+        DispatchQueue.main.async {
+            PipOverlayManager.shared.attachSourceView(view)
+        }
+        return view
+    }
+
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }

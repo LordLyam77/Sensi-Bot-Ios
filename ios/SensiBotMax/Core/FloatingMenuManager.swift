@@ -59,7 +59,7 @@ public final class FloatingMenuManager: ObservableObject {
         }
     }
 
-    // Active Navigation Tab inside Mod Menu
+    // Active Navigation Tab inside Floating Assistant
     @Published public var selectedTab: Int = 0 // 0: Aim Zones, 1: Tuner, 2: Crosshair, 3: Telemetry
 
     // Sensi Metrics
@@ -123,6 +123,14 @@ public final class FloatingMenuManager: ObservableObject {
             fireButtonSize = 52
             isJDrag = false
         }
+        PipOverlayManager.shared.updateHudMetrics(
+            general: Int(generalSensi),
+            redDot: Int(redDotSensi),
+            scope2x: Int(scope2xSensi),
+            scope4x: Int(scope4xSensi),
+            hz: 120
+        )
+        PipOverlayManager.shared.updateHudZone(name: zone.rawValue)
     }
 
     public func savePosition(x: CGFloat, y: CGFloat) {

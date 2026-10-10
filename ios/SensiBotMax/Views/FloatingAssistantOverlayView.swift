@@ -1,7 +1,9 @@
 import SwiftUI
 
-public struct FloatingModMenuOverlayView: View {
+public struct FloatingAssistantOverlayView: View {
     @ObservedObject var menuManager = FloatingMenuManager.shared
+    @ObservedObject var pipManager = PipOverlayManager.shared
+
     @State private var dragOffset: CGSize = .zero
     @State private var isDraggingLauncher: Bool = false
     @State private var panelOffset: CGSize = .zero
@@ -23,8 +25,8 @@ public struct FloatingModMenuOverlayView: View {
                                 }
                             }
 
-                        // 2. Expanded iOSGods-style Mod Menu Panel
-                        expandedModMenuPanel(screen: screen)
+                        // 2. Expanded Floating Assistant Panel
+                        expandedAssistantPanel(screen: screen)
                             .offset(panelOffset)
                             .transition(.asymmetric(
                                 insertion: .scale(scale: 0.85).combined(with: .opacity),
@@ -122,9 +124,9 @@ public struct FloatingModMenuOverlayView: View {
         )
     }
 
-    // MARK: - 2. Expanded iOSGods-style Mod Menu Panel
+    // MARK: - 2. Expanded Floating Assistant Panel
     @ViewBuilder
-    private func expandedModMenuPanel(screen: GeometryProxy) -> some View {
+    private func expandedAssistantPanel(screen: GeometryProxy) -> some View {
         let panelWidth = min(screen.size.width - 24, 370)
 
         VStack(spacing: 0) {
@@ -139,7 +141,7 @@ public struct FloatingModMenuOverlayView: View {
                     .clipShape(RoundedRectangle(cornerRadius: 4))
                     .overlay(RoundedRectangle(cornerRadius: 4).stroke(SensiTheme.rubyRed.opacity(0.6), lineWidth: 1))
 
-                Text("IN-GAME ASSISTANT")
+                Text("FLOATING ASSISTANT")
                     .font(.system(size: 13, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
 
@@ -220,10 +222,29 @@ public struct FloatingModMenuOverlayView: View {
             }
             .frame(maxHeight: 380)
 
-            // D. Panel Footer
+            // D. In-Game Float Trigger Banner
+            Button(action: {
+                pipManager.startPip()
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "scope")
+                        .font(.system(size: 12, weight: .bold))
+                    Text(pipManager.isPipActive ? "ASSISTANT ACTIVE OVER GAME" : "FLOAT OVER FREE FIRE (IN-GAME)")
+                        .font(.system(size: 11, weight: .black, design: .monospaced))
+                }
+                .foregroundColor(.white)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 8)
+                .background(pipManager.isPipActive ? Color(red: 0.0, green: 0.6, blue: 0.3) : SensiTheme.rubyRed)
+                .clipShape(RoundedRectangle(cornerRadius: 6))
+                .padding(.horizontal, 12)
+                .padding(.top, 4)
+            }
+
+            // E. Panel Footer
             HStack {
-                Text("Sensi Bot Pro • Tap ✕ to collapse")
-                    .font(.system(size: 10, design: .monospaced))
+                Text("100% Fair Play • No Game Files Altered")
+                    .font(.system(size: 9.5, design: .monospaced))
                     .foregroundColor(SensiTheme.textMuted)
                 Spacer()
                 Button(action: {
@@ -275,7 +296,7 @@ public struct FloatingModMenuOverlayView: View {
         }
     }
 
-    // MARK: - Tab 1: AIM ZONES (Matching Android Floating Assistant)
+    // MARK: - Tab 1: AIM ZONES (Matching Android In-Game Assistant)
     @ViewBuilder
     private func aimZonesTab() -> some View {
         VStack(spacing: 12) {
@@ -312,6 +333,14 @@ public struct FloatingModMenuOverlayView: View {
                     // ⚡ APPLY SETTINGS Button
                     Button(action: {
                         menuManager.triggerApplyAnimation()
+                        pipManager.updateHudMetrics(
+                            general: Int(menuManager.generalSensi),
+                            redDot: Int(menuManager.redDotSensi),
+                            scope2x: Int(menuManager.scope2xSensi),
+                            scope4x: Int(menuManager.scope4xSensi),
+                            hz: Int(DeviceProbe.current().maxFPS)
+                        )
+                        pipManager.updateHudZone(name: menuManager.activeZone.rawValue)
                     }) {
                         HStack(spacing: 4) {
                             if menuManager.isCalculating {
@@ -564,30 +593,5 @@ public struct FloatingModMenuOverlayView: View {
                 .font(.system(size: 10, weight: .bold, design: .monospaced))
                 .foregroundColor(color)
         }
-    }
-}
-
-// Extension to safely parse Hex color
-extension Color {
-    init?(hex: String) {
-        var cleanHex = hex.trimmingCharacters(in: .whitespacesAndNewlines)
-        if cleanHex.hasPrefix("#") { cleanHex.removeFirst() }
-        guard let hexVal = UInt64(cleanHex, radix: 16) else { return nil }
-
-        let r, g, b, a: Double
-        if cleanHex.count == 6 {
-            r = Double((hexVal >> 16) & 0xFF) / 255.0
-            g = Double((hexVal >> 8) & 0xFF) / 255.0
-            b = Double(hexVal & 0xFF) / 255.0
-            a = 1.0
-        } else if cleanHex.count == 8 {
-            r = Double((hexVal >> 24) & 0xFF) / 255.0
-            g = Double((hexVal >> 16) & 0xFF) / 255.0
-            b = Double((hexVal >> 8) & 0xFF) / 255.0
-            a = Double(hexVal & 0xFF) / 255.0
-        } else {
-            return nil
-        }
-        self.init(.sRGB, red: r, green: g, blue: b, opacity: a)
     }
 }
