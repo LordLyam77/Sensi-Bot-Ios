@@ -26,63 +26,38 @@ struct MainTabView: View {
     }
 
     var body: some View {
-        ZStack {
-            // 1. Permanent background anchor for in-game Floating Assistant (Always attached)
-            FloatingAssistantAnchorView()
-                .frame(width: 4, height: 4)
-                .opacity(0.01)
-                .allowsHitTesting(false)
+        TabView(selection: $selectedTab) {
+            HomeView()
+                .tabItem {
+                    Label("CALIBRATOR", systemImage: "target")
+                }
+                .tag(0)
 
-            // 2. Main Tab View
-            TabView(selection: $selectedTab) {
-                HomeView()
-                    .tabItem {
-                        Label("CALIBRATOR", systemImage: "target")
-                    }
-                    .tag(0)
+            SensiFinderView()
+                .tabItem {
+                    Label("FINDER", systemImage: "slider.horizontal.3")
+                }
+                .tag(1)
 
-                SensiFinderView()
-                    .tabItem {
-                        Label("FINDER", systemImage: "slider.horizontal.3")
-                    }
-                    .tag(1)
+            FloatingAssistantView()
+                .tabItem {
+                    Label("ASSISTANT", systemImage: "slider.horizontal.below.rectangle")
+                }
+                .tag(2)
 
-                FloatingAssistantView()
-                    .tabItem {
-                        Label("ASSISTANT", systemImage: "slider.horizontal.below.rectangle")
-                    }
-                    .tag(2)
+            SensiBotView()
+                .tabItem {
+                    Label("SENSI BOT", systemImage: "cpu.fill")
+                }
+                .tag(3)
 
-                SensiBotView()
-                    .tabItem {
-                        Label("SENSI BOT", systemImage: "cpu.fill")
-                    }
-                    .tag(3)
-
-                ProfileView()
-                    .tabItem {
-                        Label("PROFILE", systemImage: "person.crop.circle")
-                    }
-                    .tag(4)
-            }
-            .accentColor(SensiTheme.rubyRed)
-            .preferredColorScheme(.dark)
-
-            // 3. Floating Assistant Overlay (Draggable launcher & expanded panel)
-            FloatingAssistantOverlayView()
+            ProfileView()
+                .tabItem {
+                    Label("PROFILE", systemImage: "person.crop.circle")
+                }
+                .tag(4)
         }
+        .accentColor(SensiTheme.rubyRed)
+        .preferredColorScheme(.dark)
     }
-}
-
-struct FloatingAssistantAnchorView: UIViewRepresentable {
-    func makeUIView(context: Context) -> UIView {
-        let view = UIView(frame: CGRect(x: 0, y: 0, width: 280, height: 160))
-        view.backgroundColor = .clear
-        DispatchQueue.main.async {
-            PipOverlayManager.shared.attachSourceView(view)
-        }
-        return view
-    }
-
-    func updateUIView(_ uiView: UIView, context: Context) {}
 }
