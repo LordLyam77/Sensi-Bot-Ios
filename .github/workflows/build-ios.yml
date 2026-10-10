@@ -103,8 +103,8 @@ jobs:
           target["CFBundleDevelopmentRegion"] = "en"
           target["CFBundlePackageType"] = "APPL"
           target["CFBundleInfoDictionaryVersion"] = "6.0"
-          target["CFBundleShortVersionString"] = "1.0.8"
-          target["CFBundleVersion"] = "9"
+          target["CFBundleShortVersionString"] = "1.0.9"
+          target["CFBundleVersion"] = "10"
 
           # Force critical launch screen and fullscreen keys
           target["UILaunchStoryboardName"] = "LaunchScreen"
@@ -145,11 +145,11 @@ jobs:
           plutil -p build/Payload/SensiBotMax.app/Info.plist
 
           cd build
-          zip -r -9 SensiBotMax_v1.0.8.ipa Payload
+          zip -r -9 SensiBotMax_v1.0.9.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SensiBotMax_iOS_v1.0.8
-          path: ios/build/SensiBotMax_v1.0.8.ipa
+          name: SensiBotMax_iOS_v1.0.9
+          path: ios/build/SensiBotMax_v1.0.9.ipa
           retention-days: 14

@@ -3,6 +3,7 @@ import SwiftUI
 public struct SensiBotView: View {
     @State private var messages: [ChatMessage] = []
     @State private var inputText: String = ""
+    @ObservedObject private var qwenManager = LocalQwenModelManager.shared
     private let deviceProfile = DeviceProbe.current()
 
     private let suggestions = [
@@ -25,26 +26,31 @@ public struct SensiBotView: View {
                         Text("SENSI BOT")
                             .font(.system(size: 20, weight: .black, design: .rounded))
                             .foregroundColor(.white)
-                        Text("AI COACH")
+                        Text(qwenManager.isModelInstalled ? "QWEN OFFLINE" : "AI COACH")
                             .font(.system(size: 10, weight: .black, design: .rounded))
                             .padding(.horizontal, 6)
                             .padding(.vertical, 2)
-                            .background(SensiTheme.rubyRed)
+                            .background(qwenManager.isModelInstalled ? Color.green.opacity(0.8) : SensiTheme.rubyRed)
                             .foregroundColor(.white)
                             .clipShape(RoundedRectangle(cornerRadius: 4))
                     }
-                    Text("Free Fire Neural Drag & Weapon Assistant")
+                    Text(qwenManager.isModelInstalled ? "On-Device Neural Engine Active (100% Offline)" : "Free Fire Neural Drag & Weapon Assistant")
                         .font(.system(size: 11))
                         .foregroundColor(SensiTheme.textSecondary)
                 }
                 Spacer()
-                Image(systemName: "cpu.fill")
+                Image(systemName: qwenManager.isModelInstalled ? "bolt.shield.fill" : "cpu.fill")
                     .font(.system(size: 20))
-                    .foregroundColor(SensiTheme.cyanAccent)
+                    .foregroundColor(qwenManager.isModelInstalled ? .green : SensiTheme.cyanAccent)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 12)
             .background(SensiTheme.surfaceElevated)
+
+            Divider().background(SensiTheme.glassBorder)
+
+            // On-Demand Qwen Download Card
+            QwenModelCard(manager: qwenManager)
 
             Divider().background(SensiTheme.glassBorder)
 
@@ -174,12 +180,12 @@ struct MessageRow: View {
             } else {
                 VStack(alignment: .leading, spacing: 10) {
                     HStack(spacing: 6) {
-                        Image(systemName: "cpu.fill")
+                        Image(systemName: message.isLocalQwen ? "bolt.shield.fill" : "cpu.fill")
                             .font(.system(size: 12))
-                            .foregroundColor(SensiTheme.rubyRed)
-                        Text("SENSI BOT")
+                            .foregroundColor(message.isLocalQwen ? Color.green : SensiTheme.rubyRed)
+                        Text(message.isLocalQwen ? "QWEN 0.6B • LOCAL" : "SENSI BOT")
                             .font(.system(size: 10, weight: .black, design: .monospaced))
-                            .foregroundColor(SensiTheme.rubyRed)
+                            .foregroundColor(message.isLocalQwen ? Color.green : SensiTheme.rubyRed)
                     }
 
                     Text(message.text)
@@ -246,5 +252,149 @@ struct MiniStat: View {
                 .font(.system(size: 13, weight: .black, design: .monospaced))
                 .foregroundColor(.white)
         }
+    }
+}
+
+struct QwenModelCard: View {
+    @ObservedObject var manager: LocalQwenModelManager
+
+    var body: some View {
+        VStack(spacing: 8) {
+            HStack(spacing: 12) {
+                ZStack {
+                    Circle()
+                        .fill(manager.isModelInstalled ? Color.green.opacity(0.15) : SensiTheme.rubyRed.opacity(0.15))
+                        .frame(width: 36, height: 36)
+                    Image(systemName: manager.isModelInstalled ? "bolt.shield.fill" : "arrow.down.circle.fill")
+                        .font(.system(size: 18))
+                        .foregroundColor(manager.isModelInstalled ? Color.green : SensiTheme.rubyRed)
+                }
+
+                VStack(alignment: .leading, spacing: 2) {
+                    HStack(spacing: 6) {
+                        Text(QwenPromptConfig.modelName)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                        Text(manager.isModelInstalled ? "OFFLINE READY" : "ON-DEMAND")
+                            .font(.system(size: 8, weight: .black, design: .monospaced))
+                            .padding(.horizontal, 5)
+                            .padding(.vertical, 2)
+                            .background(manager.isModelInstalled ? Color.green.opacity(0.2) : SensiTheme.rubyRed.opacity(0.2))
+                            .foregroundColor(manager.isModelInstalled ? Color.green : SensiTheme.rubyRed)
+                            .clipShape(Capsule())
+                    }
+
+                    switch manager.status {
+                    case .notInstalled:
+                        Text("Download ~\(QwenPromptConfig.estimatedModelSizeMb)MB for 100% offline Neural Engine chat")
+                            .font(.system(size: 10))
+                            .foregroundColor(SensiTheme.textSecondary)
+                    case .downloading:
+                        Text(manager.downloadedBytesText.isEmpty ? "Downloading weights..." : manager.downloadedBytesText)
+                            .font(.system(size: 10, weight: .medium, design: .monospaced))
+                            .foregroundColor(SensiTheme.cyanAccent)
+                    case .ready, .loaded:
+                        Text("Active on device • Neural Engine inference enabled")
+                            .font(.system(size: 10))
+                            .foregroundColor(.green.opacity(0.9))
+                    case .error(let msg):
+                        Text(msg)
+                            .font(.system(size: 10))
+                            .foregroundColor(.red)
+                            .lineLimit(1)
+                    }
+                }
+
+                Spacer()
+
+                // Action Buttons
+                switch manager.status {
+                case .notInstalled:
+                    Button(action: {
+                        manager.startDownload()
+                    }) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "icloud.and.arrow.down")
+                                .font(.system(size: 11, weight: .bold))
+                            Text("Download")
+                                .font(.system(size: 11, weight: .bold))
+                        }
+                        .foregroundColor(.white)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            LinearGradient(
+                                colors: [SensiTheme.rubyRed, SensiTheme.rubyDark],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                        )
+                        .clipShape(Capsule())
+                    }
+                case .downloading:
+                    Button(action: {
+                        manager.cancelDownload()
+                    }) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 22))
+                            .foregroundColor(SensiTheme.textMuted)
+                    }
+                case .ready, .loaded:
+                    Button(action: {
+                        manager.deleteModel()
+                    }) {
+                        Image(systemName: "trash.fill")
+                            .font(.system(size: 14))
+                            .foregroundColor(SensiTheme.textMuted)
+                            .padding(8)
+                            .background(Color.white.opacity(0.06))
+                            .clipShape(Circle())
+                    }
+                case .error:
+                    Button(action: {
+                        manager.startDownload()
+                    }) {
+                        Text("Retry")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 10)
+                            .padding(.vertical, 6)
+                            .background(SensiTheme.rubyRed)
+                            .clipShape(Capsule())
+                    }
+                }
+            }
+
+            // Progress Bar when downloading
+            if case .downloading(let progress) = manager.status {
+                GeometryReader { geo in
+                    ZStack(alignment: .leading) {
+                        Capsule()
+                            .fill(Color.white.opacity(0.1))
+                            .frame(height: 4)
+                        Capsule()
+                            .fill(
+                                LinearGradient(
+                                    colors: [SensiTheme.rubyRed, SensiTheme.cyanAccent],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .frame(width: max(0, min(geo.size.width * CGFloat(progress), geo.size.width)), height: 4)
+                    }
+                }
+                .frame(height: 4)
+            }
+        }
+        .padding(.horizontal, 14)
+        .padding(.vertical, 10)
+        .background(Color(white: 0.08))
+        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .overlay(
+            RoundedRectangle(cornerRadius: 12)
+                .stroke(manager.isModelInstalled ? Color.green.opacity(0.3) : SensiTheme.glassBorder, lineWidth: 1)
+        )
+        .padding(.horizontal, 16)
+        .padding(.vertical, 8)
     }
 }
