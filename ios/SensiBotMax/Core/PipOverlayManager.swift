@@ -54,9 +54,9 @@ public final class PipOverlayManager: NSObject, ObservableObject {
         data.append(contentsOf: [0x57, 0x41, 0x56, 0x45]) // "WAVE"
 
         data.append(contentsOf: [0x66, 0x6D, 0x74, 0x20]) // "fmt "
-        var subchunk1Size: Int32 = 16.littleEndian
+        var subchunk1Size: Int32 = Int32(16).littleEndian
         data.append(Data(bytes: &subchunk1Size, count: 4))
-        var audioFormat: Int16 = 1.littleEndian
+        var audioFormat: Int16 = Int16(1).littleEndian
         data.append(Data(bytes: &audioFormat, count: 2))
         var numChannels = channels.littleEndian
         data.append(Data(bytes: &numChannels, count: 2))

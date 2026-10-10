@@ -542,7 +542,7 @@ public struct FloatingAssistantOverlayView: View {
 
     @ViewBuilder
     private func renderCrosshairPreview() -> some View {
-        let col = Color(hex: menuManager.crosshairColorHex) ?? SensiTheme.rubyRed
+        let col = Color(hex: menuManager.crosshairColorHex)
         let sz = CGFloat(menuManager.crosshairSize)
         let th = CGFloat(menuManager.crosshairThickness)
 
