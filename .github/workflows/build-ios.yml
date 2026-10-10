@@ -66,17 +66,63 @@ jobs:
           git push -f origin build-log-branch
           exit 1
 
-      - name: Package into IPA Payload
+      - name: Package into IPA Payload & Enforce Fullscreen Keys
         run: |
           cd ios
           mkdir -p build/Payload
           cp -r build/DerivedData/Build/Products/Release-iphoneos/SensiBotMax.app build/Payload/
+
+          # Enforce UILaunchStoryboardName, UIRequiresFullScreen, and app bundle metadata
+          python3 - << 'EOF'
+          import plistlib
+          import os
+
+          info_path = "build/Payload/SensiBotMax.app/Info.plist"
+          src_path = "SensiBotMax/App/Info.plist"
+
+          target = {}
+          if os.path.exists(info_path):
+              with open(info_path, "rb") as f:
+                  target = plistlib.load(f)
+
+          source = {}
+          if os.path.exists(src_path):
+              with open(src_path, "rb") as f:
+                  source = plistlib.load(f)
+
+          # Merge source into target
+          for k, v in source.items():
+              target[k] = v
+
+          # Force critical launch screen and fullscreen keys
+          target["UILaunchStoryboardName"] = "LaunchScreen"
+          target["UIRequiresFullScreen"] = True
+          target["UILaunchScreen"] = {"UILaunchStoryboardName": "LaunchScreen"}
+          target["CFBundleDisplayName"] = "Sensi Bot Max"
+          target["CFBundleShortVersionString"] = "1.0.2"
+          target["CFBundleVersion"] = "3"
+          target["LSRequiresIPhoneOS"] = True
+          target["CADisableMinimumFrameDurationOnPhone"] = True
+          target["UIUserInterfaceStyle"] = "Dark"
+          target["UISupportedInterfaceOrientations"] = ["UIInterfaceOrientationPortrait"]
+
+          with open(info_path, "wb") as f:
+              plistlib.dump(target, f)
+
+          print("Successfully injected full-screen Info.plist:")
+          for k in ["CFBundleDisplayName", "CFBundleShortVersionString", "UILaunchStoryboardName", "UIRequiresFullScreen", "UILaunchScreen"]:
+              print(f"  {k}: {target.get(k)}")
+          EOF
+
+          echo "Final Info.plist verification:"
+          plutil -p build/Payload/SensiBotMax.app/Info.plist
+
           cd build
-          zip -r -9 SensiBotMax_v1.0.0.ipa Payload
+          zip -r -9 SensiBotMax_v1.0.2.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SensiBotMax_iOS_v1.0.0
-          path: ios/build/SensiBotMax_v1.0.0.ipa
+          name: SensiBotMax_iOS_v1.0.2
+          path: ios/build/SensiBotMax_v1.0.2.ipa
           retention-days: 14

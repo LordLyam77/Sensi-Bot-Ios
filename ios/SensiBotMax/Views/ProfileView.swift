@@ -127,6 +127,7 @@ public struct ProfileView: View {
 
                     VStack(spacing: 8) {
                         ProfileRow(label: "Device Model", value: profile.modelMarketingName)
+                        ProfileRow(label: "App Version", value: "v1.0.2 (Build 3)")
                         ProfileRow(label: "Hardware ID", value: profile.identifier)
                         ProfileRow(label: "Retina Density", value: "\(Int(profile.ppi)) PPI")
                         ProfileRow(label: "Refresh Rate", value: "\(profile.maxFPS) Hz")
