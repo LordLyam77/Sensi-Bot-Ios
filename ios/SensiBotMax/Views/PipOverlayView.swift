@@ -31,11 +31,9 @@ public struct FloatingAssistantView: View {
     // MARK: - 1. Header Section
     private var headerSection: some View {
         VStack(spacing: 6) {
-            HStack {
-                Image(systemName: "slider.horizontal.below.rectangle")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(SensiTheme.rubyRed)
-                Text("FLOATING ASSISTANT")
+            HStack(spacing: 10) {
+                SensiLogoView(size: 26)
+                Text("ASSISTANT")
                     .font(.system(size: 22, weight: .black, design: .monospaced))
                     .foregroundColor(.white)
                 Spacer()

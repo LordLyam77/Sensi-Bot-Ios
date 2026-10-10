@@ -280,7 +280,7 @@ public struct HomeView: View {
             }
             .buttonStyle(PlainButtonStyle())
 
-            // Link 3: Floating Assistant
+            // Link 3: Assistant
             Button(action: {
                 let haptic = UIImpactFeedbackGenerator(style: .medium)
                 haptic.impactOccurred()
@@ -298,7 +298,7 @@ public struct HomeView: View {
 
                     VStack(alignment: .leading, spacing: 3) {
                         HStack {
-                            Text("FLOATING ASSISTANT")
+                            Text("ASSISTANT")
                                 .font(.system(size: 13, weight: .black, design: .monospaced))
                                 .foregroundColor(.white)
                             Spacer()
