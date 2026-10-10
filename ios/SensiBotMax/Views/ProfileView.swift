@@ -3,7 +3,6 @@ import SwiftUI
 public struct ProfileView: View {
     @ObservedObject var licenseManager = LicenseManager.shared
     @State private var copiedHwid = false
-    @State private var showingDeactivateAlert = false
     private let profile = DeviceProbe.current()
 
     public init() {}
@@ -174,26 +173,6 @@ public struct ProfileView: View {
                     }
                 }
                 .gamingCard(borderColor: SensiTheme.cyanAccent.opacity(0.3))
-
-                // Deactivate Option
-                Button(action: {
-                    showingDeactivateAlert = true
-                }) {
-                    Text("DEACTIVATE CURRENT LICENSE")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color.red.opacity(0.8))
-                        .padding(.vertical, 8)
-                }
-                .alert(isPresented: $showingDeactivateAlert) {
-                    Alert(
-                        title: Text("Deactivate License?"),
-                        message: Text("This will remove your saved license key and lock the app until re-entered."),
-                        primaryButton: .destructive(Text("Deactivate")) {
-                            licenseManager.deactivate()
-                        },
-                        secondaryButton: .cancel()
-                    )
-                }
 
                 Spacer(minLength: 30)
             }
