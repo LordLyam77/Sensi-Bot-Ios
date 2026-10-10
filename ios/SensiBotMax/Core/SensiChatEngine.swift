@@ -208,12 +208,12 @@ public final class SensiChatEngine {
                 isUser: false,
                 text: """
                 🍏 **Optimal iOS System Settings for Free Fire:**
-                - **Device**: \(deviceProfile.modelMarketingName) (\(deviceProfile.displayDiagonalInches)\" Display)
-                - **Refresh Rate**: \(deviceProfile.maxRefreshRateHz)Hz
+                - **Device**: \(deviceProfile.modelMarketingName) (\(Int(deviceProfile.ppi)) PPI)
+                - **Refresh Rate**: \(deviceProfile.maxFPS)Hz
                 - **Haptic Touch**: Settings > Accessibility > Touch > Haptic Touch -> **Fast**
                 - **Display Zoom**: Set to **Default** for maximum vertical drag area
                 - **True Tone / Night Shift**: Turn OFF during ranked matches to eliminate screen latency
-                - **Recommended General Sensi**: **\(deviceProfile.maxRefreshRateHz >= 120 ? "194 - 198 (ProMotion ultra-smooth lock)" : "190 - 195 (60Hz high-flick response)")**
+                - **Recommended General Sensi**: **\(deviceProfile.maxFPS >= 120 ? "194 - 198 (ProMotion ultra-smooth lock)" : "190 - 195 (60Hz high-flick response)")**
                 """
             )
         }
