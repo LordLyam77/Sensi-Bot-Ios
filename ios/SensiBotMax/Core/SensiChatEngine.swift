@@ -6,13 +6,11 @@ public struct ChatMessage: Identifiable {
     public let text: String
     public let timestamp: Date = Date()
     public let recommendation: SensiBotChatRecommendation?
-    public let isLocalQwen: Bool
 
-    public init(isUser: Bool, text: String, recommendation: SensiBotChatRecommendation? = nil, isLocalQwen: Bool = false) {
+    public init(isUser: Bool, text: String, recommendation: SensiBotChatRecommendation? = nil) {
         self.isUser = isUser
         self.text = text
         self.recommendation = recommendation
-        self.isLocalQwen = isLocalQwen
     }
 }
 
@@ -33,15 +31,6 @@ public final class SensiChatEngine {
 
     public func respond(to message: String, deviceProfile: IOSDeviceProfile) -> ChatMessage {
         let input = message.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
-        let isLocal = LocalQwenModelManager.shared.isModelInstalled
-
-        func formatReply(text: String, recommendation: SensiBotChatRecommendation? = nil) -> ChatMessage {
-            var replyText = text
-            if isLocal {
-                replyText = "⚡ **[Qwen3-0.6B • Offline Neural Engine]**\n" + replyText
-            }
-            return ChatMessage(isUser: false, text: replyText, recommendation: recommendation, isLocalQwen: isLocal)
-        }
 
         // 1. Creator sensitivities
         if input.contains("white") || input.contains("444") {
@@ -56,7 +45,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Waist-level sharp J-Drag flick with instant weapon swap",
                 advice: "White444's signature Moroccan headshot ratio locks onto helmet level during close-range 1v1 flicks."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "Here is the verified **White444 One-Tap Config** calibrated for your \(deviceProfile.modelMarketingName):",
                 recommendation: rec
             )
@@ -74,7 +64,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Sprint -> 90° Jump Arc -> High Upward Flick -> Instant Sit-Up Gloo Wall",
                 advice: "Raistar's ultra-speed configuration maximizes rotation flick speed for 360-degree spins."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "Here is the official **Raistar Speed Setup** calibrated for iOS:",
                 recommendation: rec
             )
@@ -92,7 +83,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Smooth upward straight pull for mid-range, aggressive J-flick for close quarters",
                 advice: "Lyam FF's official tournament configuration balancing one-tap headshots with tight SMG recoil control."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "Here is the **Lyam FF Tournament Profile** for \(deviceProfile.modelMarketingName):",
                 recommendation: rec
             )
@@ -111,7 +103,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Drop fire button slightly below waist, then pull sharply upward towards the enemy neck",
                 advice: "Shotguns require lower fire button size (44%) to maximize vertical thumb drag distance on screen."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "For the **M1887 Shotgun**, vertical flick travel is crucial on iOS:",
                 recommendation: rec
             )
@@ -129,7 +122,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Gentle upward steady pull; do not snap too hard or bullets will spray around the head",
                 advice: "SMGs need slightly lower General (190) than shotguns to prevent crosshair shaking during continuous spray."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "Here is the calibrated **SMG Headshot Profile** (MP40/UMP):",
                 recommendation: rec
             )
@@ -147,7 +141,8 @@ public final class SensiChatEngine {
                 dragTechnique: "Wait for enemy footstep pause -> snap J-drag to helmet -> release instantly",
                 advice: "Single-tap weapons benefit from Apple's 120Hz/touch polling responsiveness. Keep fire button at 45%."
             )
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: "Optimized for **One-Tap Precision** (Desert Eagle / Woodpecker):",
                 recommendation: rec
             )
@@ -155,7 +150,8 @@ public final class SensiChatEngine {
 
         // 3. Aim problems diagnostics
         if input.contains("over") || input.contains("flying") || input.contains("head") {
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: """
                 ⚠️ **Aim Flying Over Enemy Head?**
                 1. **Reduce General Sensitivity** by 4 to 6 points.
@@ -166,7 +162,8 @@ public final class SensiChatEngine {
         }
 
         if input.contains("chest") || input.contains("stuck") || input.contains("low") {
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: """
                 🎯 **Aim Stuck on Enemy Chest?**
                 1. **Increase General Sensitivity** by 5 to 8 points.
@@ -177,27 +174,60 @@ public final class SensiChatEngine {
         }
 
         if input.contains("button") || input.contains("size") {
-            return formatReply(
+            return ChatMessage(
+                isUser: false,
                 text: """
                 🔘 **Recommended Fire Button Sizes on iPhone:**
                 - **2-Finger Thumbs**: 48% - 52% (balanced grip stability)
                 - **3-Finger Claw**: 44% - 48% (quicker reflex pulls)
                 - **4-Finger Claw**: 42% - 46% (maximum vertical swipe runway)
                 
-                *Tip: Position the button slightly lower on screen so you have 60% of the upper screen space for upward drag.*
+                *Tip: On iPhones, position the button in the lower-right third of the screen to leave 60%+ vertical runway for upward drag.*
+                """
+            )
+        }
+
+        // 4. iOS Specific System Settings & DPI Queries
+        if input.contains("dpi") || input.contains("developer") || input.contains("width") {
+            return ChatMessage(
+                isUser: false,
+                text: """
+                📱 **Does iPhone have DPI like Android?**
+                iOS does **not** have an Android "DPI / Smallest Width" setting. Instead, iPhone sensitivity is optimized via Apple's native touch engine:
+                
+                1. **Haptic Touch**: Go to *Settings > Accessibility > Touch > Haptic Touch* -> Set to **Fast**.
+                2. **Display Zoom**: Go to *Settings > Display & Brightness > Display Zoom* -> Keep on **Default** (gives maximum pixel runway for thumb flicks).
+                3. **Touch Accommodations**: Keep **OFF** (enabling this can add touch delay in Free Fire).
+                4. **Free Fire General Sensi**: Set to **192 - 198** on your \(deviceProfile.modelMarketingName) to match high-DPI Android flick speeds without jitter!
+                """
+            )
+        }
+
+        if input.contains("ios") || input.contains("iphone") || input.contains("settings") || input.contains("120") || input.contains("hz") {
+            return ChatMessage(
+                isUser: false,
+                text: """
+                🍏 **Optimal iOS System Settings for Free Fire:**
+                - **Device**: \(deviceProfile.modelMarketingName) (\(deviceProfile.displayDiagonalInches)\" Display)
+                - **Refresh Rate**: \(deviceProfile.maxRefreshRateHz)Hz
+                - **Haptic Touch**: Settings > Accessibility > Touch > Haptic Touch -> **Fast**
+                - **Display Zoom**: Set to **Default** for maximum vertical drag area
+                - **True Tone / Night Shift**: Turn OFF during ranked matches to eliminate screen latency
+                - **Recommended General Sensi**: **\(deviceProfile.maxRefreshRateHz >= 120 ? "194 - 198 (ProMotion ultra-smooth lock)" : "190 - 195 (60Hz high-flick response)")**
                 """
             )
         }
 
         // Default intelligent response
-        return formatReply(
+        return ChatMessage(
+            isUser: false,
             text: """
             🤖 **SensiBot Neural Coach (iOS Edition)**
             I can generate custom configurations and diagnose aim issues for:
             - **Weapons**: M1887, MP40, UMP, Desert Eagle, Woodpecker, AWM
             - **Creators**: White444, Raistar, Lyam FF
             - **Issues**: Aim flying over head, stuck on chest, recoil shaking
-            - **HUD**: Fire button size, button placement, touch drag velocity
+            - **HUD**: Fire button size, button placement, drag flick tips
             
             What weapon or aim problem are you tuning today?
             """
