@@ -54,7 +54,9 @@ public enum DeviceProbe {
         "iPhone16,2": 460,                       // iPhone 15 Pro Max
         "iPhone17,1": 460, "iPhone17,2": 460,   // iPhone 16 Pro, 16 Pro Max
         "iPhone17,3": 460, "iPhone17,4": 460,   // iPhone 16, 16 Plus
-        "iPhone17,5": 460                        // iPhone 16e
+        "iPhone17,5": 460,                       // iPhone 16e
+        "iPhone18,1": 460, "iPhone18,2": 460,   // iPhone 17 Pro, 17 Pro Max
+        "iPhone18,3": 460, "iPhone18,4": 460    // iPhone 17, 17 Plus / Air
     ]
 
     private static let marketingNames: [String: String] = [
@@ -88,7 +90,11 @@ public enum DeviceProbe {
         "iPhone17,1": "iPhone 16 Pro",
         "iPhone17,2": "iPhone 16 Pro Max",
         "iPhone17,3": "iPhone 16",
-        "iPhone17,4": "iPhone 16 Plus"
+        "iPhone17,4": "iPhone 16 Plus",
+        "iPhone18,1": "iPhone 17 Pro",
+        "iPhone18,2": "iPhone 17 Pro Max",
+        "iPhone18,3": "iPhone 17",
+        "iPhone18,4": "iPhone 17 Plus"
     ]
 
     public static func machineIdentifier() -> String {
