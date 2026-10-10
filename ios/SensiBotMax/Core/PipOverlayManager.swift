@@ -7,68 +7,94 @@ public final class PipOverlayManager: NSObject, ObservableObject {
 
     @Published public var isPipActive: Bool = false
     @Published public var isPipSupported: Bool = false
+    @Published public var isPipPossible: Bool = false
     @Published public var statusMessage: String = "Ready"
 
-    public var playerLayer: AVPlayerLayer?
     private var pipController: AVPictureInPictureController?
-    private var player: AVQueuePlayer?
-    private var looper: AVPlayerLooper?
+    private var pipCallVC: AVPictureInPictureVideoCallViewController?
+    private var pipObservation: NSKeyValueObservation?
+    private weak var activeSourceView: UIView?
 
     public override init() {
         super.init()
         self.isPipSupported = AVPictureInPictureController.isPictureInPictureSupported()
         setupAudioSession()
-        setupLoopingPipLayer()
     }
 
-    private func setupAudioSession() {
+    public func setupAudioSession() {
         do {
-            try AVAudioSession.sharedInstance().setCategory(.playback, mode: .moviePlayback, options: [.mixWithOthers])
-            try AVAudioSession.sharedInstance().setActive(true)
+            let session = AVAudioSession.sharedInstance()
+            try session.setCategory(.playback, mode: .moviePlayback, options: [.mixWithOthers])
+            try session.setActive(true)
         } catch {
             print("AudioSession setup error: \(error.localizedDescription)")
         }
     }
 
-    public func setupLoopingPipLayer() {
-        guard let videoURL = PipVideoGenerator.getOrCreatePipVideoURL() else {
-            self.statusMessage = "Video asset generation failed"
+    public func attachSourceView(_ sourceView: UIView) {
+        self.activeSourceView = sourceView
+
+        guard AVPictureInPictureController.isPictureInPictureSupported() else {
+            self.statusMessage = "PiP not supported on this device"
             return
         }
 
-        let item = AVPlayerItem(url: videoURL)
-        let queuePlayer = AVQueuePlayer(playerItem: item)
-        queuePlayer.isMuted = true
-        self.looper = AVPlayerLooper(player: queuePlayer, templateItem: item)
-        self.player = queuePlayer
+        if #available(iOS 15.0, *) {
+            let callVC = AVPictureInPictureVideoCallViewController()
+            callVC.preferredContentSize = CGSize(width: 280, height: 160)
 
-        let layer = AVPlayerLayer(player: queuePlayer)
-        layer.videoGravity = .resizeAspectFill
-        layer.frame = CGRect(x: 0, y: 0, width: 320, height: 180)
-        self.playerLayer = layer
+            let floatingHud = FloatingHudView(frame: CGRect(x: 0, y: 0, width: 280, height: 160))
+            callVC.view.addSubview(floatingHud)
+            floatingHud.translatesAutoresizingMaskIntoConstraints = false
+            NSLayoutConstraint.activate([
+                floatingHud.topAnchor.constraint(equalTo: callVC.view.topAnchor),
+                floatingHud.bottomAnchor.constraint(equalTo: callVC.view.bottomAnchor),
+                floatingHud.leadingAnchor.constraint(equalTo: callVC.view.leadingAnchor),
+                floatingHud.trailingAnchor.constraint(equalTo: callVC.view.trailingAnchor)
+            ])
 
-        if AVPictureInPictureController.isPictureInPictureSupported() {
-            self.pipController = AVPictureInPictureController(playerLayer: layer)
-            self.pipController?.delegate = self
-            if #available(iOS 14.2, *) {
-                self.pipController?.canStartPictureInPictureAutomaticallyFromInline = true
+            let contentSource = AVPictureInPictureController.ContentSource(
+                activeVideoCallSourceView: sourceView,
+                contentViewController: callVC
+            )
+
+            let controller = AVPictureInPictureController(contentSource: contentSource)
+            controller.delegate = self
+            controller.canStartPictureInPictureAutomaticallyFromInline = true
+            self.pipController = controller
+            self.pipCallVC = callVC
+
+            self.pipObservation = controller.observe(\.isPictureInPicturePossible, options: [.initial, .new]) { [weak self] c, _ in
+                DispatchQueue.main.async {
+                    self?.isPipPossible = c.isPictureInPicturePossible
+                    if c.isPictureInPicturePossible {
+                        self?.statusMessage = "Ready to Launch"
+                    }
+                }
             }
-            queuePlayer.play()
         }
     }
 
     public func startPip() {
+        setupAudioSession()
         guard let controller = pipController else {
-            self.statusMessage = "PiP Controller not ready"
+            self.statusMessage = "Initializing HUD..."
             return
         }
-        player?.play()
-        controller.startPictureInPicture()
+
+        if controller.isPictureInPicturePossible {
+            controller.startPictureInPicture()
+        } else {
+            // Retry after momentary delay if layout is still attaching
+            self.statusMessage = "Starting Picture-in-Picture..."
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.15) {
+                controller.startPictureInPicture()
+            }
+        }
     }
 
     public func stopPip() {
-        guard let controller = pipController else { return }
-        controller.stopPictureInPicture()
+        pipController?.stopPictureInPicture()
     }
 
     public func togglePip() {
@@ -91,7 +117,7 @@ extension PipOverlayManager: AVPictureInPictureControllerDelegate {
     public func pictureInPictureControllerDidStopPictureInPicture(_ pictureInPictureController: AVPictureInPictureController) {
         DispatchQueue.main.async {
             self.isPipActive = false
-            self.statusMessage = "HUD Closed"
+            self.statusMessage = "Ready to Launch"
         }
     }
 

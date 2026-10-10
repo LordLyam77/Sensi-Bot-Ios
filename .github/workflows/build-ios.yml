@@ -103,8 +103,8 @@ jobs:
           target["CFBundleDevelopmentRegion"] = "en"
           target["CFBundlePackageType"] = "APPL"
           target["CFBundleInfoDictionaryVersion"] = "6.0"
-          target["CFBundleShortVersionString"] = "1.0.2"
-          target["CFBundleVersion"] = "3"
+          target["CFBundleShortVersionString"] = "1.0.3"
+          target["CFBundleVersion"] = "4"
 
           # Force critical launch screen and fullscreen keys
           target["UILaunchStoryboardName"] = "LaunchScreen"
@@ -113,6 +113,7 @@ jobs:
           target["LSRequiresIPhoneOS"] = True
           target["CADisableMinimumFrameDurationOnPhone"] = True
           target["UIUserInterfaceStyle"] = "Dark"
+          target["UIBackgroundModes"] = ["audio", "voip"]
           target["UISupportedInterfaceOrientations"] = ["UIInterfaceOrientationPortrait"]
 
           # Variable expansion / cleanup for any remaining $(...) variables
@@ -144,11 +145,11 @@ jobs:
           plutil -p build/Payload/SensiBotMax.app/Info.plist
 
           cd build
-          zip -r -9 SensiBotMax_v1.0.2.ipa Payload
+          zip -r -9 SensiBotMax_v1.0.3.ipa Payload
 
       - name: Upload IPA Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: SensiBotMax_iOS_v1.0.2
-          path: ios/build/SensiBotMax_v1.0.2.ipa
+          name: SensiBotMax_iOS_v1.0.3
+          path: ios/build/SensiBotMax_v1.0.3.ipa
           retention-days: 14

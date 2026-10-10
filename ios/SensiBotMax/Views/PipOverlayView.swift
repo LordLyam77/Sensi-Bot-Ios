@@ -23,37 +23,42 @@ struct PipOverlayView: View {
                 }
                 .padding(.top, 16)
 
-                // Inline Player View (Required by iOS to anchor PiP)
+                // Inline Player View (Anchors the PiP Window)
                 VStack(spacing: 12) {
-                    Text("TACTICAL HUD PREVIEW")
-                        .font(.system(size: 11, weight: .black, design: .monospaced))
-                        .foregroundColor(SensiTheme.cyanAccent)
-                        .frame(maxWidth: .infinity, alignment: .leading)
+                    HStack {
+                        Text("TACTICAL HUD PREVIEW")
+                            .font(.system(size: 11, weight: .black, design: .monospaced))
+                            .foregroundColor(SensiTheme.cyanAccent)
+                        Spacer()
+                        Text(pipManager.statusMessage.uppercased())
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
+                            .foregroundColor(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.goldAccent)
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background((pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.goldAccent).opacity(0.12))
+                            .clipShape(RoundedRectangle(cornerRadius: 4))
+                    }
 
                     ZStack {
                         PipPlayerPreviewView()
                             .frame(height: 160)
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .stroke(pipManager.isPipActive ? SensiTheme.fairPlayGreen : SensiTheme.rubyRed.opacity(0.6), lineWidth: 1.5)
-                            )
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
 
                         if pipManager.isPipActive {
-                            VStack(spacing: 4) {
+                            VStack(spacing: 6) {
                                 Image(systemName: "pip.swap")
                                     .font(.system(size: 28))
                                     .foregroundColor(SensiTheme.fairPlayGreen)
-                                Text("FLOATING OVER GAME")
+                                Text("HUD FLOATING OVER GAME")
                                     .font(.system(size: 12, weight: .black, design: .monospaced))
                                     .foregroundColor(.white)
-                                Text("Switch to Free Fire now")
+                                Text("Switch to Free Fire now — widget stays on screen")
                                     .font(.system(size: 11))
                                     .foregroundColor(SensiTheme.textSecondary)
                             }
-                            .padding(12)
-                            .background(Color.black.opacity(0.75))
-                            .clipShape(RoundedRectangle(cornerRadius: 10))
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(Color.black.opacity(0.78))
+                            .clipShape(RoundedRectangle(cornerRadius: 14))
                         }
                     }
 
@@ -78,9 +83,10 @@ struct PipOverlayView: View {
                             )
                         )
                         .clipShape(RoundedRectangle(cornerRadius: 12))
+                        .shadow(color: (pipManager.isPipActive ? Color.clear : SensiTheme.rubyRed.opacity(0.4)), radius: 8, x: 0, y: 3)
                     }
                 }
-                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.glassBorder)
+                .gamingCard(borderColor: pipManager.isPipActive ? SensiTheme.fairPlayGreen.opacity(0.5) : SensiTheme.rubyRed.opacity(0.4))
 
                 // How it works advice
                 VStack(alignment: .leading, spacing: 10) {
@@ -92,7 +98,7 @@ struct PipOverlayView: View {
                             .foregroundColor(SensiTheme.cyanAccent)
                     }
 
-                    Text("1. Tap **LAUNCH IN-GAME HUD** above.\n2. Switch into **Free Fire**.\n3. The HUD widget will remain floating in the corner of your screen throughout your match.\n4. You can drag and reposition the floating HUD anywhere on your display.")
+                    Text("1. Tap **LAUNCH IN-GAME HUD** above (or simply swipe up to Home).\n2. Switch to **Free Fire**.\n3. The crosshair widget remains floating in the corner of your screen throughout your match.\n4. You can drag, resize (pinch to zoom), or dock the HUD to the screen edge.")
                         .font(.system(size: 12))
                         .foregroundColor(SensiTheme.textSecondary)
                         .lineSpacing(4)
@@ -136,19 +142,26 @@ struct PipOverlayView: View {
 struct PipPlayerPreviewView: UIViewRepresentable {
     func makeUIView(context: Context) -> UIView {
         let container = UIView()
-        container.backgroundColor = .black
-        if let playerLayer = PipOverlayManager.shared.playerLayer {
-            playerLayer.frame = CGRect(x: 0, y: 0, width: 320, height: 160)
-            container.layer.addSublayer(playerLayer)
+        container.backgroundColor = .clear
+
+        let hud = FloatingHudView(frame: .zero)
+        container.addSubview(hud)
+        hud.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            hud.topAnchor.constraint(equalTo: container.topAnchor),
+            hud.bottomAnchor.constraint(equalTo: container.bottomAnchor),
+            hud.leadingAnchor.constraint(equalTo: container.leadingAnchor),
+            hud.trailingAnchor.constraint(equalTo: container.trailingAnchor)
+        ])
+
+        DispatchQueue.main.async {
+            PipOverlayManager.shared.attachSourceView(container)
         }
+
         return container
     }
 
-    func updateUIView(_ uiView: UIView, context: Context) {
-        if let playerLayer = PipOverlayManager.shared.playerLayer {
-            playerLayer.frame = uiView.bounds
-        }
-    }
+    func updateUIView(_ uiView: UIView, context: Context) {}
 }
 
 struct BulletRow: View {
