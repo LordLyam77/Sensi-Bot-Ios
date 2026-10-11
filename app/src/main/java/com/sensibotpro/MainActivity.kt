@@ -1,6 +1,7 @@
 package com.sensibotpro
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -15,7 +16,11 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        try {
+            enableEdgeToEdge()
+        } catch (e: Throwable) {
+            Log.e("MainActivity", "enableEdgeToEdge ignored", e)
+        }
         setContent {
             SensiBotProTheme {
                 AppNavigation(authViewModel = authViewModel)
@@ -25,8 +30,10 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        // Periodic re-validation: Re-check validity whenever the app resumes from background
-        // to catch revoked keys or manual server resets without requiring a full app restart.
-        authViewModel.checkOnResume()
+        try {
+            authViewModel.checkOnResume()
+        } catch (e: Throwable) {
+            Log.e("MainActivity", "checkOnResume ignored", e)
+        }
     }
 }
