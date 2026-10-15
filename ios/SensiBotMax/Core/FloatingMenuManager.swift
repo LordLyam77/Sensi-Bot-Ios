@@ -178,11 +178,58 @@ public final class FloatingMenuManager: ObservableObject {
                     let notif = UINotificationFeedbackGenerator()
                     notif.notificationOccurred(.success)
 
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                    // Open the game (Free Fire MAX or standard Free Fire) once animation is complete
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.45) {
+                        self.openFreeFireGame()
+                    }
+
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
                         self.isApplied = false
                     }
                 }
             }
         }
+    }
+
+    /// Automatically launches Free Fire MAX or Free Fire on iOS
+    public func openFreeFireGame() {
+        // Registered iOS URL schemes for Free Fire MAX and standard Free Fire
+        let freeFireSchemes = [
+            "freefiremax://",
+            "freefire://",
+            "garenafreefiremax://",
+            "garenafreefire://",
+            "freefireth://",
+            "fb1140039209507920://", // Free Fire MAX Facebook App scheme
+            "fb1834247543503289://"  // Free Fire Standard Facebook App scheme
+        ]
+
+        func tryNextScheme(index: Int) {
+            guard index < freeFireSchemes.count else {
+                // If canOpenURL query isn't resolved, attempt direct open on Free Fire Max then Free Fire
+                if let maxUrl = URL(string: "freefiremax://") {
+                    UIApplication.shared.open(maxUrl, options: [:]) { opened in
+                        if !opened, let stdUrl = URL(string: "freefire://") {
+                            UIApplication.shared.open(stdUrl, options: [:], completionHandler: nil)
+                        }
+                    }
+                }
+                return
+            }
+
+            let schemeStr = freeFireSchemes[index]
+            guard let url = URL(string: schemeStr) else {
+                tryNextScheme(index: index + 1)
+                return
+            }
+
+            if UIApplication.shared.canOpenURL(url) {
+                UIApplication.shared.open(url, options: [:], completionHandler: nil)
+            } else {
+                tryNextScheme(index: index + 1)
+            }
+        }
+
+        tryNextScheme(index: 0)
     }
 }

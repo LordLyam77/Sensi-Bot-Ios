@@ -32,6 +32,14 @@ targets:
           - voip
         UISupportedInterfaceOrientations:
           - UIInterfaceOrientationPortrait
+        LSApplicationQueriesSchemes:
+          - freefiremax
+          - freefire
+          - garenafreefiremax
+          - garenafreefire
+          - freefireth
+          - fb1140039209507920
+          - fb1834247543503289
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sensibotpro.ios

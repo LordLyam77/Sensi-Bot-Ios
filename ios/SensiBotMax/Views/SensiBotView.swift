@@ -186,7 +186,7 @@ struct MessageRow: View {
                             .foregroundColor(SensiTheme.rubyRed)
                     }
 
-                    Text(message.text)
+                    Text(LocalizedStringKey(message.text))
                         .font(.system(size: 13))
                         .foregroundColor(SensiTheme.textPrimary)
                         .lineSpacing(3)
@@ -207,11 +207,11 @@ struct MessageRow: View {
 
                             Divider().background(Color.white.opacity(0.1))
 
-                            Text("🎯 Drag: \(rec.dragTechnique)")
+                            Text(LocalizedStringKey("🎯 Drag: \(rec.dragTechnique)"))
                                 .font(.system(size: 11, weight: .medium))
                                 .foregroundColor(SensiTheme.goldAccent)
 
-                            Text("💡 Advice: \(rec.advice)")
+                            Text(LocalizedStringKey("💡 Advice: \(rec.advice)"))
                                 .font(.system(size: 11))
                                 .foregroundColor(SensiTheme.textSecondary)
                         }

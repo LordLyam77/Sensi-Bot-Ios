@@ -117,8 +117,8 @@ public struct FloatingAssistantView: View {
                             } else if menuManager.isApplied {
                                 Image(systemName: "checkmark.circle.fill")
                                     .font(.system(size: 13, weight: .black))
-                                Text("APPLIED!")
-                                    .font(.system(size: 11, weight: .black, design: .monospaced))
+                                Text("APPLIED! OPENING GAME...")
+                                    .font(.system(size: 10, weight: .black, design: .monospaced))
                             } else {
                                 Image(systemName: "bolt.fill")
                                     .font(.system(size: 12))

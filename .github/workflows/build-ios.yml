@@ -125,6 +125,15 @@ jobs:
           target["UIUserInterfaceStyle"] = "Dark"
           target["UIBackgroundModes"] = ["audio", "voip"]
           target["UISupportedInterfaceOrientations"] = ["UIInterfaceOrientationPortrait"]
+          target["LSApplicationQueriesSchemes"] = [
+              "freefiremax",
+              "freefire",
+              "garenafreefiremax",
+              "garenafreefire",
+              "freefireth",
+              "fb1140039209507920",
+              "fb1834247543503289"
+          ]
 
           # Variable expansion / cleanup for any remaining $(...) variables
           var_map = {
