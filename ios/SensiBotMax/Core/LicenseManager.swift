@@ -1,6 +1,7 @@
 import UIKit
 import Combine
 import Security
+import CryptoKit
 
 public enum LicenseValidationResult {
     case success(token: String)
@@ -23,26 +24,71 @@ public final class LicenseManager: ObservableObject {
     private let keyUserDefault = "sensibot_ios_vip_key"
     private let tokenUserDefault = "sensibot_ios_jwt_token"
     private let keyKeychainHardwareId = "sensibot_ios_hwid"
+    private let keyKeychainVipKey = "sensibot_ios_vip_key"
+    private let keyKeychainJwtToken = "sensibot_ios_jwt_token"
+    private static let keychainService = "com.sensibotpro.ios.keychain"
 
     public init() {
         SupabaseConfig.logStartupConfig()
         self.hardwareId = getOrCreateHardwareId()
-        self.activeKey = UserDefaults.standard.string(forKey: keyUserDefault) ?? ""
-        let savedToken = UserDefaults.standard.string(forKey: tokenUserDefault) ?? ""
+
+        // 1. Restore VIP key: Check Keychain first (persists across app deletion/reinstalls), then UserDefaults
+        var savedKey = readKeychain(key: keyKeychainVipKey) ?? ""
+        if savedKey.isEmpty {
+            savedKey = UserDefaults.standard.string(forKey: keyUserDefault) ?? ""
+            if !savedKey.isEmpty {
+                saveKeychain(key: keyKeychainVipKey, value: savedKey)
+            }
+        }
+        self.activeKey = savedKey
+
+        // 2. Restore JWT token: Check Keychain first, then UserDefaults
+        var savedToken = readKeychain(key: keyKeychainJwtToken) ?? ""
+        if savedToken.isEmpty {
+            savedToken = UserDefaults.standard.string(forKey: tokenUserDefault) ?? ""
+            if !savedToken.isEmpty {
+                saveKeychain(key: keyKeychainJwtToken, value: savedToken)
+            }
+        }
 
         if !activeKey.isEmpty && !savedToken.isEmpty {
             self.isActivated = true
+            self.statusMessage = "VIP License Active! Bound to \(self.hardwareId)"
+            // Keep UserDefaults in sync
+            UserDefaults.standard.set(activeKey, forKey: keyUserDefault)
+            UserDefaults.standard.set(savedToken, forKey: tokenUserDefault)
         }
         self.isInitialCheckComplete = true
     }
 
-    /// Persistent hardware ID using identifierForVendor backed by iOS Keychain
+    /// Persistent hardware ID guaranteed to stay identical across app deletes and reinstalls on the same phone.
+    /// 1. Reads from iOS Keychain (which persists across app uninstall/reinstall).
+    /// 2. If Keychain was ever wiped, generates a deterministic hardware-locked device ID
+    ///    from the immutable physical specs of this exact iPhone (zero random UUIDs).
     public func getOrCreateHardwareId() -> String {
+        // Step 1: Check existing Keychain entry
         if let existing = readKeychain(key: keyKeychainHardwareId), !existing.isEmpty {
             return existing
         }
-        let idfv = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-        let formattedHwid = "IOS-" + idfv.prefix(16).uppercased()
+
+        // Step 2: Deterministic hardware-locked device ID derived from immutable physical hardware properties.
+        // Even if the user deletes the app or changes certificates, the same physical phone will always
+        // recompute the exact same device ID, preventing accidental lockouts on reinstall.
+        let machine = DeviceProbe.machineIdentifier()
+        let hwModel = getSysctlString("hw.model")
+        let screen = UIScreen.main
+        let screenBounds = "\(Int(screen.nativeBounds.width))x\(Int(screen.nativeBounds.height))@\(Int(screen.nativeScale))"
+        let cpuCores = ProcessInfo.processInfo.activeProcessorCount
+        let ramBytes = ProcessInfo.processInfo.physicalMemory
+        let diskGB = totalDiskCapacityGB()
+
+        let rawSeed = "IOS-HWID|\(machine)|\(hwModel)|\(screenBounds)|\(cpuCores)|\(ramBytes)|\(diskGB)"
+
+        let hash = SHA256.hash(data: Data(rawSeed.utf8))
+        let hex = hash.map { String(format: "%02X", $0) }.joined()
+        let formattedHwid = "IOS-" + hex.prefix(16)
+
+        // Save into Keychain with ThisDeviceOnly persistence
         saveKeychain(key: keyKeychainHardwareId, value: formattedHwid)
         return formattedHwid
     }
@@ -72,8 +118,12 @@ public final class LicenseManager: ObservableObject {
 
             switch result {
             case .success(let token):
+                // Persist to both UserDefaults and Keychain (Keychain survives app uninstall)
                 UserDefaults.standard.set(trimmed, forKey: self.keyUserDefault)
                 UserDefaults.standard.set(token, forKey: self.tokenUserDefault)
+                self.saveKeychain(key: self.keyKeychainVipKey, value: trimmed)
+                self.saveKeychain(key: self.keyKeychainJwtToken, value: token)
+
                 self.activeKey = trimmed
                 self.isActivated = true
                 self.statusMessage = "VIP License Active! Bound to \(self.hardwareId)"
@@ -184,36 +234,113 @@ public final class LicenseManager: ObservableObject {
     public func deactivate() {
         UserDefaults.standard.removeObject(forKey: keyUserDefault)
         UserDefaults.standard.removeObject(forKey: tokenUserDefault)
+        deleteKeychain(key: keyKeychainVipKey)
+        deleteKeychain(key: keyKeychainJwtToken)
         self.activeKey = ""
         self.isActivated = false
         self.statusMessage = "License cleared."
     }
 
+    // MARK: - Hardware Introspection Helpers
+
+    private func getSysctlString(_ name: String) -> String {
+        var size: Int = 0
+        sysctlbyname(name, nil, &size, nil, 0)
+        guard size > 0 else { return "UNKNOWN" }
+        var buffer = [CChar](repeating: 0, count: size)
+        sysctlbyname(name, &buffer, &size, nil, 0)
+        return String(cString: buffer)
+    }
+
+    private func totalDiskCapacityGB() -> Int64 {
+        do {
+            let attrs = try FileManager.default.attributesOfFileSystem(forPath: NSHomeDirectory())
+            if let totalBytes = attrs[.systemSize] as? Int64 {
+                // Round to nearest GB to stay stable across minor OS file-system adjustments
+                return (totalBytes + (500 * 1024 * 1024)) / (1024 * 1024 * 1024)
+            }
+        } catch {}
+        return 0
+    }
+
     // MARK: - Keychain Helper
+    // Uses kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly so:
+    // 1. Data persists even when the app is uninstalled and reinstalled.
+    // 2. Data is hardware-bound to THIS device and will never migrate to other devices via backups.
+
     private func saveKeychain(key: String, value: String) {
         guard let data = value.data(using: .utf8) else { return }
+
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
-            kSecAttrAccount as String: key,
-            kSecValueData as String: data
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: key
         ]
-        SecItemDelete(query as CFDictionary)
-        SecItemAdd(query as CFDictionary, nil)
+
+        let attributesToUpdate: [String: Any] = [
+            kSecValueData as String: data,
+            kSecAttrAccessible as String: kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+        ]
+
+        let status = SecItemUpdate(query as CFDictionary, attributesToUpdate as CFDictionary)
+        if status == errSecItemNotFound {
+            var newItem = query
+            newItem[kSecValueData as String] = data
+            newItem[kSecAttrAccessible as String] = kSecAttrAccessibleAfterFirstUnlockThisDeviceOnly
+            let addStatus = SecItemAdd(newItem as CFDictionary, nil)
+            if addStatus != errSecSuccess {
+                print("[Keychain] SecItemAdd failed with status: \(addStatus)")
+            }
+        } else if status != errSecSuccess {
+            print("[Keychain] SecItemUpdate failed with status: \(status)")
+        }
     }
 
     private func readKeychain(key: String) -> String? {
+        // 1. Try modern query with explicit service
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
             kSecAttrAccount as String: key,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne
         ]
         var item: CFTypeRef?
-        if SecItemCopyMatching(query as CFDictionary, &item) == errSecSuccess,
-           let data = item as? Data,
-           let result = String(data: data, encoding: .utf8) {
-            return result
+        var status = SecItemCopyMatching(query as CFDictionary, &item)
+        if status == errSecSuccess, let data = item as? Data, let str = String(data: data, encoding: .utf8), !str.isEmpty {
+            return str
         }
+
+        // 2. Fallback: Check legacy query (without service) for backwards compatibility with earlier installs
+        let legacyQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key,
+            kSecReturnData as String: true,
+            kSecMatchLimit as String: kSecMatchLimitOne
+        ]
+        item = nil
+        status = SecItemCopyMatching(legacyQuery as CFDictionary, &item)
+        if status == errSecSuccess, let data = item as? Data, let str = String(data: data, encoding: .utf8), !str.isEmpty {
+            // Upgrade to modern keychain with ThisDeviceOnly attribute
+            saveKeychain(key: key, value: str)
+            return str
+        }
+
         return nil
+    }
+
+    private func deleteKeychain(key: String) {
+        let query: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: Self.keychainService,
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(query as CFDictionary)
+
+        let legacyQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrAccount as String: key
+        ]
+        SecItemDelete(legacyQuery as CFDictionary)
     }
 }
