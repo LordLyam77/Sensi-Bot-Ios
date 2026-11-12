@@ -8,6 +8,6 @@ object HeadlockModule {
     const val FEATURE_FLAG_KEY = "features.headlock.enabled"
 
     @Volatile
-    var isFeatureEnabled: Boolean = false
+    var isFeatureEnabled: Boolean = true
 }
 

@@ -4,6 +4,6 @@ import Foundation
 /// Controlled by features.headlock.enabled (default false until final enable commit).
 public enum HeadlockModule {
     public static let featureFlagKey = "features.headlock.enabled"
-    public static var isFeatureEnabled: Bool = false
+    public static var isFeatureEnabled: Bool = true
 }
 
