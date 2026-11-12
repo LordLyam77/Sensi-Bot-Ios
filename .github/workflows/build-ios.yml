@@ -134,6 +134,12 @@ jobs:
               "fb1140039209507920",
               "fb1834247543503289"
           ]
+          target["CFBundleURLTypes"] = [
+              {
+                  "CFBundleURLName": "com.sensibotpro.ios",
+                  "CFBundleURLSchemes": ["sensibotmax"]
+              }
+          ]
 
           # Variable expansion / cleanup for any remaining $(...) variables
           var_map = {

@@ -20,4 +20,5 @@ sealed class Screen(val route: String, val title: String, val icon: ImageVector?
     object DpiCalculator : Screen("dpi_calculator", "DPI Calculator")
     object FloatingAssistant : Screen("floating_assistant", "Assistant", Icons.Default.Layers)
     object TouchLab : Screen("touch_lab", "Touch Velocity Lab")
+    object Headlock : Screen("headlock", "Headlock", Icons.Default.CenterFocusStrong)
 }

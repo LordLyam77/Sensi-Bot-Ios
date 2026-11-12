@@ -71,5 +71,16 @@
 		<string>fb1140039209507920</string>
 		<string>fb1834247543503289</string>
 	</array>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.sensibotpro.ios</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>sensibotmax</string>
+			</array>
+		</dict>
+	</array>
 </dict>
 </plist>

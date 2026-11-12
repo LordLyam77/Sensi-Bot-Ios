@@ -40,6 +40,10 @@ targets:
           - freefireth
           - fb1140039209507920
           - fb1834247543503289
+        CFBundleURLTypes:
+          - CFBundleURLName: com.sensibotpro.ios
+            CFBundleURLSchemes:
+              - sensibotmax
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.sensibotpro.ios

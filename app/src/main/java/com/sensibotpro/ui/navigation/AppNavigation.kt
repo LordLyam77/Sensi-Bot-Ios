@@ -30,6 +30,8 @@ import com.sensibotpro.ui.screens.sensifinder.CalibrationScreen
 import com.sensibotpro.ui.screens.sensifinder.DpiCalculatorScreen
 import com.sensibotpro.ui.screens.sensifinder.SensiFinderScreen
 import com.sensibotpro.ui.screens.support.SupportScreen
+import com.sensibotpro.headlock.HeadlockModule
+import com.sensibotpro.headlock.ui.HeadlockGate
 import com.sensibotpro.ui.theme.*
 import com.sensibotpro.ui.viewmodel.*
 
@@ -65,10 +67,11 @@ fun AppNavigation(
     val navBackStackEntry by navController.currentBackStackEntryAsState()
     val currentDestination = navBackStackEntry?.destination
 
-    val bottomNavScreens = listOf(
+    val bottomNavScreens = listOfNotNull(
         Screen.Home,
         Screen.SensiFinder,
         Screen.FloatingAssistant,
+        if (HeadlockModule.isFeatureEnabled) Screen.Headlock else null,
         Screen.SensiBot,
         Screen.Profile
     )
@@ -225,6 +228,11 @@ fun AppNavigation(
                     viewModel = labVm,
                     onNavigateBack = { navController.popBackStack() }
                 )
+            }
+            if (HeadlockModule.isFeatureEnabled) {
+                composable(Screen.Headlock.route) {
+                    HeadlockGate(onNavigateBack = { navController.popBackStack() })
+                }
             }
         }
     }

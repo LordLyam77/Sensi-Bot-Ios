@@ -45,6 +45,14 @@ struct MainTabView: View {
                 }
                 .tag(2)
 
+            if HeadlockModule.isFeatureEnabled {
+                HeadlockGateView()
+                    .tabItem {
+                        Label("HEADLOCK", systemImage: "scope")
+                    }
+                    .tag(5)
+            }
+
             SensiBotView()
                 .tabItem {
                     Label("SENSI BOT", systemImage: "cpu.fill")
