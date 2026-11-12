@@ -48,7 +48,7 @@ fun HeadlockScreen(onNavigateBack: () -> Unit = {}) {
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(DeepCarbon)
+            .background(VoidBlack)
             .verticalScroll(rememberScrollState())
             .padding(16.dp),
         verticalArrangement = Arrangement.spacedBy(14.dp)

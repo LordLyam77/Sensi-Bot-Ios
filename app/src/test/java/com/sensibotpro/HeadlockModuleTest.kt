@@ -174,10 +174,16 @@ class HeadlockModuleTest {
                 problem = AimProblem.OVERSHOOTING_HEAD
             )
 
-            assertEquals(offRec.profile, onRec.profile)
-            assertEquals(offRec.recommendedDpi, onRec.recommendedDpi)
-            assertEquals(offRec.dragTechnique, onRec.dragTechnique)
-            assertEquals(offRec.explanation, onRec.explanation)
+            assertEquals(offRec.profile.general, onRec.profile.general)
+            assertEquals(offRec.profile.redDot, onRec.profile.redDot)
+            assertEquals(offRec.profile.scope2x, onRec.profile.scope2x)
+            assertEquals(offRec.profile.scope4x, onRec.profile.scope4x)
+            assertEquals(offRec.profile.sniper, onRec.profile.sniper)
+            assertEquals(offRec.profile.freeLook, onRec.profile.freeLook)
+            assertEquals(offRec.profile.fireButtonSize, onRec.profile.fireButtonSize)
+            assertEquals(offRec.profile.recommendedDpi, onRec.profile.recommendedDpi)
+            assertEquals(offRec.profile.dragStyle, onRec.profile.dragStyle)
+            assertEquals(offRec.profile.dpiAdvice, onRec.profile.dpiAdvice)
         } finally {
             HeadlockModule.isFeatureEnabled = previousFlag
         }

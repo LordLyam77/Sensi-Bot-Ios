@@ -52,7 +52,7 @@ public struct HeadlockWizardView: View {
                                 }
                             }
                             .padding(14)
-                            .background(selected ? SensiTheme.rubyRed.opacity(0.2) : SensiTheme.cardBg)
+                            .background(selected ? SensiTheme.rubyRed.opacity(0.2) : SensiTheme.surface)
                             .cornerRadius(10)
                         }
                     }
@@ -64,7 +64,7 @@ public struct HeadlockWizardView: View {
                     GeometryReader { geo in
                         ZStack(alignment: .topLeading) {
                             RoundedRectangle(cornerRadius: 12)
-                                .fill(SensiTheme.cardBg)
+                                .fill(SensiTheme.surface)
                                 .overlay(
                                     RoundedRectangle(cornerRadius: 12)
                                         .stroke(SensiTheme.rubyRed.opacity(0.4), lineWidth: 1)
@@ -133,7 +133,7 @@ public struct HeadlockWizardView: View {
                         }
                     }
                     .padding(14)
-                    .background(SensiTheme.cardBg)
+                    .background(SensiTheme.surface)
                     .cornerRadius(12)
 
                 case .commit:
@@ -152,7 +152,7 @@ public struct HeadlockWizardView: View {
                     }
                     .padding(14)
                     .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(SensiTheme.cardBg)
+                    .background(SensiTheme.surface)
                     .cornerRadius(12)
                 }
 
@@ -191,7 +191,7 @@ public struct HeadlockWizardView: View {
             }
             .padding(16)
         }
-        .background(SensiTheme.deepCarbon.ignoresSafeArea())
+        .background(SensiTheme.voidBlack.ignoresSafeArea())
     }
 }
 

@@ -79,7 +79,7 @@ public struct HeadlockScreenView: View {
                         }
                     }
                     .padding(14)
-                    .background(SensiTheme.cardBg)
+                    .background(SensiTheme.surface)
                     .cornerRadius(12)
 
                     // Primary Setup Checklist (HeadlockGuide)
@@ -127,12 +127,12 @@ public struct HeadlockScreenView: View {
                         }
                     }
                     .padding(14)
-                    .background(SensiTheme.cardBg)
+                    .background(SensiTheme.surface)
                     .cornerRadius(12)
                 }
                 .padding(16)
             }
-            .background(SensiTheme.deepCarbon.ignoresSafeArea())
+            .background(SensiTheme.voidBlack.ignoresSafeArea())
             .sheet(isPresented: $showShareSheet) {
                 if let url = shareUrl {
                     HeadlockShareSheet(items: [url])
